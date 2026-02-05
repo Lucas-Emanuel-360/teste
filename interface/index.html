@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoboBlocks - Arduino na Web</title>
+  
+  <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+  <script src="https://unpkg.com/blockly/msg/pt-br.js"></script>
+  
+  <link rel="stylesheet" href="stylesheet.css">
+  <style>
+    .hamburger-icon { font-size: 24px; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; margin-right: 15px; }
+    .hamburger-icon:hover { color: var(--primary); }
+  </style>
+</head>
+<body class="theme-aura">
+
+  <header class="top-bar">
+    <div class="logo-section" style="display: flex; align-items: center;">
+        <button id="menuBtn" class="hamburger-icon">☰</button>
+        <div class="logo">RoboBlocks IDE</div>
+    </div>
+    
+    <div class="arduino-controls">
+        <div id="agentStatus" title="Status da Conexão Local">
+            <span class="status-dot" id="agentDot"></span> Conector
+        </div>
+
+        <select id="boardSelect" class="board-select">
+            <option value="uno">Arduino Uno</option>
+            <option value="nano">Arduino Nano</option>
+            <option value="mega">Arduino Mega 2560</option>
+        </select>
+        
+        <select id="portInput" class="board-select">
+            <option value="">Porta COM</option>
+        </select>
+        <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
+        
+        <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
+        <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
+        
+        <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
+        <button id="saveBtn" class="icon-btn" title="Salvar Projeto">💾</button>
+        <button id="loadBtn" class="icon-btn" title="Abrir Projeto">📂</button>
+    </div>
+
+    <div class="spacer"></div> 
+    
+    <div class="actions-section">
+      <button class="secondary-btn" id="connectSerialBtn">🔌 Monitor Serial</button>
+      <button class="primary-btn" id="showCodeBtn">▶ Ver Código</button>
+    </div>
+  </header>
+
+  <div id="sideMenu" class="side-menu">
+    <div class="side-menu-header">
+        <h3>Menu</h3>
+        <button id="closeMenuBtn" class="icon-btn" style="font-size: 18px;">✕</button>
+    </div>
+    <div class="side-menu-body">
+        <button id="openThemeModalBtn" class="menu-item">
+            🎨 Mudar Tema
+        </button>
+
+        <button id="downloadAgentBtn" class="menu-item">
+    ⬇️ Baixar Conector (.exe)
+</button>
+        </div>
+  </div>
+
+  <div class="main-layout">
+    <main class="workspace-container">
+      <div id="blocklyArea"></div>
+      
+      <div id="serialMonitor">
+        <div class="serial-header">
+          <strong>📟 Monitor Serial (9600 baud)</strong>
+          <button id="closeSerialBtn">✕</button>
+          <button id="clearSerialBtn">Limpar</button>
+        </div>
+        <div id="serialOutput"></div>
+      </div>
+    </main>
+  </div>
+
+<div id="themeModal" class="config-modal" style="display: none;">
+    <div class="config-box">
+        <div class="config-header">
+            <h2>🎨 Escolha um Tema</h2>
+        </div>
+        <div class="config-body theme-grid">
+            <div class="theme-card aura-theme-card" onclick="setTheme('aura')">
+                <div class="theme-preview" style="background: #15141b;"></div>
+                <span>Aura (Padrão)</span>
+            </div>
+            <div class="theme-card light-theme-card" onclick="setTheme('light')">
+                <div class="theme-preview" style="background: #ffffff;"></div>
+                <span>Light</span>
+            </div>
+            <div class="theme-card void-theme-card" onclick="setTheme('void')">
+                <div class="theme-preview" style="background: #000000;"></div>
+                <span>Void (OLED)</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="closeThemeBtn" class="secondary-btn">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div id="configModal" class="config-modal" style="display: none;">
+    <div class="config-box">
+        <div class="config-header">
+            <h2>⚙️ Configuração do Sistema</h2>
+        </div>
+        
+        <div class="config-body">
+            <div class="config-row">
+                <label>📂 Caminho do Arduino (Debug):</label>
+                <input type="text" id="arduinoPathInput" placeholder="C:\..." spellcheck="false">
+                <small>Local do executável <a style="color: rgba(0, 255, 255, 0.589);">arduino_debug.exe</a></small>
+            </div>
+            <br>
+            <div class="config-row">
+                <label>🌐 Endereço do Agente (Localhost):</label>
+                <input type="text" id="agentUrlInput" value="http://localhost:3000" spellcheck="false">
+                <small>Porta onde o conector está rodando</small>
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button id="closeConfigBtn" class="secondary-btn cancel-btn-tech">Cancelar</button>
+            <button id="saveConfigBtn" class="primary-btn save-btn-tech">💾 Salvar Alterações</button>
+        </div>
+    </div>
+</div>
+
+<div id="codeModal" class="modal" style="display: none;">
+    <div class="modal-content" style="position: relative;">
+        
+        <button id="closeModalBtn" class="close-modal-tech" title="Fechar"></button>
+
+        <div class="modal-header">
+            <h2 style="margin: 0; padding-right: 40px;">💻 Código C++ Gerado</h2>
+        </div>
+        
+        <div class="modal-body">
+            <pre><code id="codeViewer"></code></pre>
+        </div>
+        
+        <div class="modal-footer">
+            <button id="copyCodeBtn" class="primary-btn copy-btn-tech">📋 Copiar Código</button>
+        </div>
+    </div>
+</div>
+
+<xml id="toolbox" style="display: none">
+    <category name="Exemplos" colour="#F39C12">
+      <button text="Piscar LED (Blink)" callbackKey="LOAD_BLINK"></button>
+      <button text="Controlar Servo" callbackKey="LOAD_SERVO"></button>
+      <button text="Ler Potenciômetro" callbackKey="LOAD_POT"></button>
+    </category>
+    <sep></sep>
+    <category name="Controle" colour="#D94848">
+      <block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block>
+      <block type="controls_stop"></block>
+      <block type="controls_if_simple"></block>
+      <block type="controls_while"></block>
+      <block type="controls_repeat"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
+      <block type="controls_flow_statements"></block>
+    </category>
+    <category name="Entrada/Saída" colour="#4A90E2">
+      <block type="io_pin_mode"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value></block>
+      <block type="io_digital_write"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><value name="STATE"><shadow type="io_high"></shadow></value></block>
+      <block type="io_digital_read"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value></block>
+      <block type="io_analog_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="VALUE"><shadow type="math_number"><field name="NUM">128</field></shadow></value></block>
+      <block type="io_analog_read"><value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block>
+      <block type="io_pulsein"><value name="PIN"><shadow type="math_number"><field name="NUM">7</field></shadow></value><value name="TIMEOUT"><shadow type="math_number"><field name="NUM">20000</field></shadow></value></block>
+      <block type="io_serial_print"><value name="TEXT"><shadow type="text"><field name="TEXT">Ola Mundo</field></shadow></value></block>
+      <block type="io_tone"><value name="PIN"><shadow type="math_number"><field name="NUM">8</field></shadow></value><value name="FREQ"><shadow type="math_number"><field name="NUM">440</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block>
+      <block type="io_notone"><value name="PIN"><shadow type="math_number"><field name="NUM">8</field></shadow></value></block>
+      <block type="time_millis"></block>
+      <block type="io_high"></block>
+      <block type="io_low"></block>
+    </category>
+    <category name="Servo" colour="#4A90E2">
+      <block type="servo_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
+      <block type="servo_read"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value></block>
+    </category>
+    <category name="Lógica" colour="#9966FF">
+      <block type="logic_boolean"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+    </category>
+    <category name="Matemática" colour="#5BA55B">
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+      <block type="math_modulo"><value name="DIVIDEND"><shadow type="math_number"><field name="NUM">10</field></shadow></value><value name="DIVISOR"><shadow type="math_number"><field name="NUM">2</field></shadow></value></block>
+      <block type="math_constrain"><value name="VALUE"><shadow type="math_number"><field name="NUM">150</field></shadow></value><value name="LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="HIGH"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="math_single"></block>
+      <block type="math_random"><value name="FROM"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="TO"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block>
+      <block type="math_map"><value name="VALUE"><shadow type="math_number"><field name="NUM">512</field></shadow></value><value name="FROM_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="FROM_HIGH"><shadow type="math_number"><field name="NUM">1023</field></shadow></value><value name="TO_LOW"><shadow type="math_number"><field name="NUM">0</field></shadow></value><value name="TO_HIGH"><shadow type="math_number"><field name="NUM">255</field></shadow></value></block>
+    </category>
+    <category name="Texto" colour="#E67E22">
+      <block type="text"></block>
+      <block type="text_join"></block>
+      <block type="text_string_conv"></block>
+    </category>
+    <category name="Variáveis" colour="#FF6680" custom="VARIABLE"></category>
+  </xml>
+
+  <script src="../static/js/blocks/blocks_definition/blocks_controls.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_io.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_logic.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_math.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_variables.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_servo.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_text.js"></script>
+
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/arduinoGenerator_setup.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_controls.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_io.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_logic.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_math.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_variables.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_servo.js"></script> 
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_text.js"></script>
+
+  <script src="../static/js/main.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+/* ----------------------------------
+   1. VARIÁVEIS GLOBAIS - DEFINIÇÃO DE TEMAS
+   ---------------------------------- */
+:root {
+  /* --- TEMA AURA (Padrão) --- */
+  --bg-app: #15141b;
+  --bg-panel: #21202e;
+  --bg-header: #1b1a23;
+  --bg-input: #2b2a3b;
+  --primary: #a277ff;
+  --secondary: #61ffca;
+  --accent: #ffca85;
+  --danger: #ff6767;
+  --pink: #f694ff;
+  --blue: #82e2ff;
+  --text-main: #edecee;
+  --text-muted: #a39ea9;
+  --border-color: #3b3a4d;
+  
+  --font-stack: 'Segoe UI', 'Roboto', sans-serif;
+  --font-code: 'Fira Code', 'Consolas', monospace;
+  --radius: 10px;
+  --shadow-soft: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* --- TEMA LIGHT (Branco) --- */
+body.theme-light {
+  --bg-app: #f2f2f5;
+  --bg-panel: #ffffff;
+  --bg-header: #e1e1e6;
+  --bg-input: #f4f4f4;
+  --primary: #5856d6; /* Roxo mais escuro para contraste no branco */
+  --secondary: #00b894;
+  --text-main: #2d3436;
+  --text-muted: #636e72;
+  --border-color: #dcdce0;
+}
+
+/* --- TEMA VOID (Estilo Petro/OLED) --- */
+body.theme-void {
+  --bg-app: #000000;      /* Preto absoluto */
+  --bg-panel: #050505;    /* Quase preto */
+  --bg-header: #000000;
+  --bg-input: #0a0a0a;
+  --primary: #9d00ff;     /* Neon bem forte */
+  --secondary: #00ff88;   /* Verde Neon */
+  --text-main: #ffffff;
+  --text-muted: #888888;
+  --border-color: #222222; /* Bordas sutis mas existentes */
+}
+
+/* ----------------------------------
+   2. RESET E BASE
+   ---------------------------------- */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: var(--font-stack); background: var(--bg-app); color: var(--text-main); overflow: hidden; transition: background 0.3s ease, color 0.3s ease; }
+
+/* ----------------------------------
+   3. HEADER E SIDEBAR
+   ---------------------------------- */
+.top-bar {
+  height: 60px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  display: flex; align-items: center; padding: 0 25px;
+  position: relative; z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+/* Menu Lateral (Sidenav) */
+.side-menu {
+  position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+  background: var(--bg-panel); border-right: 1px solid var(--border-color);
+  z-index: 3000; transition: left 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  box-shadow: 10px 0 50px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+}
+.side-menu.open { left: 0; }
+
+.side-menu-header {
+  padding: 20px; border-bottom: 1px solid var(--border-color);
+  display: flex; justify-content: space-between; align-items: center;
+  font-weight: bold; font-size: 18px; color: var(--primary);
+}
+
+.side-menu-body { padding: 10px; }
+.menu-item {
+  width: 100%; padding: 15px 20px; text-align: left; background: transparent;
+  color: var(--text-main); border-radius: var(--radius); margin-bottom: 5px;
+  font-size: 15px; font-weight: 500;
+}
+.menu-item:hover { background: rgba(162, 119, 255, 0.1); color: var(--primary); }
+
+/* Logo */
+.logo { 
+  font-size: 20px; font-weight: 700; margin-right: 30px; letter-spacing: 0.5px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.arduino-controls, .actions-section { display: flex; gap: 15px; align-items: center; }
+.spacer { flex-grow: 1; }
+
+/* Inputs */
+input, select {
+  background: var(--bg-input); color: var(--text-main); border: 1px solid var(--border-color);
+  padding: 9px 12px; border-radius: var(--radius); outline: none; font-size: 13px;
+  transition: all 0.2s ease;
+}
+input:focus, select:focus { 
+  border-color: var(--primary); 
+  box-shadow: 0 0 0 2px rgba(162, 119, 255, 0.2); 
+}
+
+/* ----------------------------------
+   4. BOTÕES
+   ---------------------------------- */
+button { 
+  cursor: pointer; border: none; border-radius: var(--radius); 
+  transition: all 0.2s ease; font-family: inherit; position: relative; overflow: hidden;
+}
+button:active { transform: scale(0.97); }
+
+#uploadBtn { 
+  background: linear-gradient(135deg, var(--accent), #ff9f43); 
+  color: #15141b; padding: 9px 24px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+}
+#uploadBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(255, 202, 133, 0.4); }
+
+.primary-btn { background: var(--primary); color: #fff; padding: 9px 20px; font-weight: 600; }
+.primary-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(162, 119, 255, 0.3); }
+
+.secondary-btn { background: #2f2e3e; border: 1px solid var(--border-color); color: var(--text-main); padding: 9px 20px; font-weight: 600; }
+.secondary-btn:hover { background: var(--bg-input); border-color: #9b040436; color: var(--danger); }
+
+/* Tema Light adjustments for buttons */
+body.theme-light .secondary-btn { background: #e0e0e0; color: #333; }
+body.theme-light .secondary-btn:hover { background: #d0d0d05b; border-color: #9b040436; color: var(--danger);}
+
+#closeMenuBtn {
+  transition: 0.4s;
+  width: 40px; height: 40px; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--text-muted); border: 1px solid transparent; border-radius: 8px;
+}
+#closeMenuBtn:hover { transition: 0.4s; background: rgba(124, 33, 33, 0.274); color: var(--danger); border-color: #570404; rotate: 90deg; }
+
+.icon-btn {
+  transition: 0.4s;
+  width: 40px; height: 40px; background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--text-muted); border: 1px solid transparent; border-radius: 8px;
+}
+.icon-btn:hover { transition: 0.4s; background: rgba(255, 255, 255, 0.075); border-color: var(--border-color);}
+
+body.theme-light .icon-btn:hover { background: rgba(0, 0, 0, 0.05); border-color: #9c9c9c; }
+
+body.theme-light  .modal-header{color:#000000;}
+
+.status-dot { height: 8px; width: 8px; background: #555; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.status-online { background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
+#agentStatus { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; cursor: help; margin-right: 15px; }
+
+/* ----------------------------------
+   5. WORKSPACE E BLOCOS
+   ---------------------------------- */
+.main-layout { display: flex; height: calc(100vh - 60px); width: 100%; }
+.workspace-container { flex: 1; position: relative; background: var(--bg-app); transition: background 0.3s ease; }
+#blocklyArea { width: 100%; height: 100%; }
+.blocklyToolboxDiv { background-color: var(--bg-panel) !important; border-right: 1px solid var(--border-color) !important; transition: background-color 0.3s ease; }
+.blocklyFlyoutBackground { fill: var(--bg-panel) !important; opacity: 0.9 !important; }
+
+/* ----------------------------------
+   6. MODAIS E CONFIG
+   ---------------------------------- */
+.config-modal, .modal {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: none; align-items: center; justify-content: center; z-index: 2000;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.modal-visible { opacity: 1; display: flex !important; }
+
+.config-box, .modal-content {
+  background: var(--bg-panel); border: 1px solid var(--border-color);
+  border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  transform: scale(0.95) translateY(10px); transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: hidden; color: var(--text-main);
+}
+.modal-visible .config-box, .modal-visible .modal-content { transform: scale(1) translateY(0); }
+
+/* Layout da seleção de temas */
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; padding: 30px; }
+.theme-card {
+    border: 2px solid var(--border-color); border-radius: 10px; padding: 15px;
+    cursor: pointer; text-align: center; transition: 0.2s;
+}
+.theme-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+.theme-preview { width: 100%; height: 60px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #333; }
+/* Específico para visualização do card Light */
+.light-theme-card .theme-preview { border: 1px solid #ccc; }
+
+.config-box { width: 550px; padding: 0; }
+.config-header { padding: 20px 30px; border-bottom: 2px solid var(--primary); }
+.config-header h2 { font-size: 18px; margin: 0; color: var(--text-main); }
+
+.config-body { padding: 30px; }
+.config-row { margin-bottom: 25px; }
+.config-row label { display: block; margin-bottom: 10px; font-size: 13px; font-weight: 700; color: var(--text-muted); }
+.config-row input { width: 100%; font-family: var(--font-code); color: var(--secondary); padding: 12px; }
+
+.modal-footer { padding: 20px 35px; background: transparent; display: flex; justify-content: flex-end; gap: 20px; }
+
+/* Modal Código */
+.modal-content { width: 800px; height: 80vh; display: flex; flex-direction: column; }
+.modal-header { padding: 20px 30px; border-bottom: 1px solid var(--border-color); }
+.modal-body { flex: 1; padding: 0; background: var(--bg-input); overflow: auto; }
+#codeViewer { padding: 30px; display: block; color: var(--text-main); font-family: var(--font-code); font-size: 14px; line-height: 1.6; }
+
+/* Close buttons */
+.close-modal-tech {
+  position: absolute; top: 20px; right: 20px; width: 34px; height: 34px;
+  background: none; /* Fundo transparente */
+  border: none; /* Garante que não tenha borda */
+  display: flex; align-items: center; justify-content: center; 
+  transition: 0.2s; z-index: 10; cursor: pointer;
+}
+
+/* As linhas do X */
+.close-modal-tech::before, .close-modal-tech::after {
+  content: ''; position: absolute; width: 14px; height: 2px; 
+  background: var(--text-muted); /* Cor original (cinza) */
+  border-radius: 2px;
+  transition: background 0.2s; /* Adicionei transição para a cor mudar suavemente */
+}
+
+.close-modal-tech::before { transform: rotate(45deg); }
+.close-modal-tech::after { transform: rotate(-45deg); }
+
+/* Quando passar o mouse no botão, mude o fundo das LINHAS (o X) para vermelho */
+.close-modal-tech:hover::before,
+.close-modal-tech:hover::after {
+  background: var(--danger); 
+}
+
+/* Opcional: Se quiser um fundo bem suave no botão ao passar o mouse */
+.close-modal-tech:hover {
+  transform: rotate(90deg); /* Efeito extra: girar ao passar o mouse */
+}
+
+/* ----------------------------------
+   7. EXTRAS
+   ---------------------------------- */
+#serialMonitor {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 0;
+  background: #0f0e13; border-top: 1px solid var(--border-color);
+  color: var(--secondary); font-family: var(--font-code); z-index: 50;
+  transition: height 0.4s cubic-bezier(0.19, 1, 0.22, 1); display: flex; flex-direction: column;
+}
+#serialMonitor.open { height: 200px; }
+.serial-header { padding: 8px 20px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; }
+#serialOutput { flex: 1; padding: 15px; overflow-y: auto; font-size: 13px; line-height: 1.5; }
+
+.toast {
+  position: fixed; bottom: 30px; right: -300px;
+  background: var(--bg-panel); color: var(--text-main); padding: 14px 24px;
+  border-radius: 8px; border-left: 4px solid var(--secondary);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 3000;
+  transition: right 0.4s cubic-bezier(0.19, 1, 0.22, 1); font-size: 14px;
+}
+.toast.show { right: 30px; }
+
+/* Spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(128,128,128,0.2);
+  border-top-color: var(--text-main); border-radius: 50%; display: inline-block;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Syntax Highlighting */
+.code-keyword { color: var(--primary); font-weight: bold; }
+.code-function { color: var(--secondary); }
+.code-number { color: var(--accent); }
+.code-string { color: var(--pink); }
+.code-comment { color: #6d6d6d; font-style: italic; }
+
+/* =========================================
+   FIX: ESTILO DO SELETOR DE PORTA
+   ========================================= */
+#portInput {
+    appearance: none; /* Remove o estilo padrão feio do Windows */
+    -webkit-appearance: none;
+    background-color: var(--bg-input);
+    color: var(--secondary); /* Cor verde neon/ciano */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0 35px 0 15px; /* Espaço extra na direita para a setinha */
+    height: 40px; /* Mesma altura dos botões */
+    font-family: var(--font-code);
+    font-weight: bold;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2361ffca' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    min-width: 130px;
+    transition: all 0.2s ease;
+}
+
+#portInput:hover {
+    border-color: var(--secondary);
+    box-shadow: 0 0 10px rgba(97, 255, 202, 0.1);
+}
+
+#portInput:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Estilo das opções internas (Suporte limitado pelos navegadores, mas ajuda) */
+#portInput option {
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+    padding: 10px;
+}
