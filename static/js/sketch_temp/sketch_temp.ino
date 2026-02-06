@@ -1,17 +1,15 @@
 // Código Gerado pelo Robôblocks
 
-#include <Servo.h>
-Servo servo_9;
-
 void setup() {
-  servo_9.attach(9);
+  pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT);
 }
 
 void loop() {
 while (true) {
-  servo_9.write(0);
+  digitalWrite(13, HIGH);
   delay((1000) * 1000);
-  servo_9.write(180);
+  digitalWrite(13, LOW);
   delay((1000) * 1000);
 }
 }

@@ -5,80 +5,143 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 
+// Bibliotecas visuais (instalar: npm install chalk@4 boxen@5 figlet)
+const chalk = require('chalk');
+const figlet = require('figlet');
+const boxen = require('boxen');
+
 const app = express();
-app.use(cors()); // Permite acesso do navegador
+app.use(cors());
 app.use(bodyParser.json());
 
-// Verifica se está online
-app.get('/status', (req, res) => {
-    res.json({ status: 'online', version: '1.0.0' });
-});
+const PORT = 3000;
 
-// Faz o Upload
-app.post('/upload', (req, res) => {
-    const { code, board, port, arduinoPath } = req.body;
+// === FUNÇÕES DE LOG VISUAL ===
+const logInfo = (msg) => console.log(`${chalk.blue('ℹ')} ${msg}`);
+const logSuccess = (msg) => console.log(`${chalk.green('✔')} ${msg}`);
+const logError = (msg) => console.log(`${chalk.red('✖')} ${msg}`);
+const logWarn = (msg) => console.log(`${chalk.yellow('⚠')} ${msg}`);
 
-    console.log(`>>> Pedido de upload: ${board} na porta ${port}`);
+// Tela de Boas-vindas
+function showWelcomeScreen() {
+    console.clear();
+    console.log(
+        chalk.hex('#a277ff')(
+            figlet.textSync('RoboBlocks', { horizontalLayout: 'full' })
+        )
+    );
+    
+    console.log(boxen(
+        `${chalk.bold('Status:')} ${chalk.green('Online')} 🟢\n` +
+        `${chalk.bold('Porta:')}  ${PORT}\n` +
+        `${chalk.bold('Modo:')}   Ready to Code`,
+        { padding: 1, margin: 1, borderStyle: 'round', borderColor: 'cyan' }
+    ));
+    
+    logInfo('Aguardando comandos da IDE...');
+}
 
-    // === MODO SIMULAÇÃO ===
-    // Se a porta for a de teste, finge que fez o upload
-    if (port === "COM_TESTE") {
-        console.log("⚠️ MODO SIMULAÇÃO ATIVADO");
-        console.log("Fingindo que estou enviando para o Arduino...");
-        
-        // Simula uma demora de 3 segundos (tempo real de um upload)
-        setTimeout(() => {
-            console.log(">>> Upload 'Fake' concluído!");
-            return res.json({ 
-                success: true, 
-                output: "MODO SIMULAÇÃO:\nO código foi compilado e enviado (de mentirinha).\nNenhum Arduino foi ferido neste teste." 
-            });
-        }, 3000);
-        return; // Para aqui e não executa o resto
-    }
-    // ======================================
+// === HELPER: Mapear Placa ===
+function getBoardPackage(boardName) {
+    if (boardName === 'mega') return 'arduino:avr:mega';
+    if (boardName === 'nano') return 'arduino:avr:nano';
+    return 'arduino:avr:uno'; // Default UNO
+}
 
-    if (!code || !board || !port || !arduinoPath) {
-        return res.status(400).json({ success: false, output: 'Faltam parâmetros.' });
-    }
-
-    // 1. Criar pasta temporária
+// === HELPER: Salvar Arquivo Temporário ===
+function saveTempFile(code) {
     const sketchDir = path.join(process.cwd(), 'sketch_temp');
     if (!fs.existsSync(sketchDir)) fs.mkdirSync(sketchDir);
-
-    // 2. Salvar .ino
+    
     const filePath = path.join(sketchDir, 'sketch_temp.ino');
-    try {
-        fs.writeFileSync(filePath, code);
-    } catch (e) {
-        return res.status(500).json({ success: false, output: 'Erro ao salvar arquivo: ' + e.message });
-    }
+    fs.writeFileSync(filePath, code);
+    return filePath;
+}
 
-    // 3. Montar comando (Arduino CLI antigo via debug)
-    // Sintaxe: arduino_debug.exe --upload --board pacote:arch:placa --port COMx arquivo.ino
-    const boardPackage = board === 'mega' ? 'arduino:avr:mega' : 
-                         board === 'nano' ? 'arduino:avr:nano' : 
-                         'arduino:avr:uno';
-
-    const command = `"${arduinoPath}" --upload --board ${boardPackage} --port ${port} "${filePath}"`;
-
-    console.log(`>>> Executando: ${command}`);
-
-    // 4. Executar
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Erro: ${error.message}`);
-            return res.json({ success: false, output: stderr || error.message });
-        }
-        console.log('>>> Sucesso!');
-        res.json({ success: true, output: stdout });
-    });
+// Rota de Status
+app.get('/status', (req, res) => {
+    // Não vamos poluir o log com pings de status a cada 2 segundos
+    res.json({ status: 'online', version: '2.0.0' });
 });
 
-const PORT = 3000;
+// === ROTA 1: VERIFICAR (COMPILAR) ===
+app.post('/verify', (req, res) => {
+    const { code, board, arduinoPath } = req.body;
+    logInfo(`Pedido de Verificação (Compile) para: ${chalk.cyan(board)}`);
+
+    // Simulação
+    if (board === "COM_TESTE" || !arduinoPath) {
+        setTimeout(() => {
+            logSuccess('Simulação de verificação concluída.');
+            res.json({ success: true, output: "Modo Simulação: Código compilado com sucesso (Fake)." });
+        }, 1500);
+        return;
+    }
+
+    try {
+        const filePath = saveTempFile(code);
+        const boardPkg = getBoardPackage(board);
+        
+        // Comando --verify (apenas compila)
+        const command = `"${arduinoPath}" --verify --board ${boardPkg} "${filePath}"`;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                logError('Erro na compilação.');
+                return res.json({ success: false, output: stderr || error.message });
+            }
+            logSuccess('Código verificado com sucesso!');
+            res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
+        });
+    } catch (e) {
+        logError(e.message);
+        res.status(500).json({ success: false, output: e.message });
+    }
+});
+
+// === ROTA 2: UPLOAD (ENVIAR) ===
+app.post('/upload', (req, res) => {
+    const { code, board, port, arduinoPath } = req.body;
+    
+    // Simulação
+    if (port === "COM_TESTE") {
+        logWarn('Iniciando Upload Simulado...');
+        setTimeout(() => {
+            logSuccess('Upload Simulado Concluído!');
+            res.json({ success: true, output: "Upload Fake realizado com sucesso." });
+        }, 3000);
+        return;
+    }
+
+    if (!code || !board || !port) {
+        return res.status(400).json({ success: false, output: 'Dados incompletos.' });
+    }
+
+    logInfo(`Iniciando Upload: ${chalk.cyan(board)} na porta ${chalk.yellow(port)}`);
+
+    try {
+        const filePath = saveTempFile(code);
+        const boardPkg = getBoardPackage(board);
+        
+        // Comando --upload
+        const command = `"${arduinoPath}" --upload --board ${boardPkg} --port ${port} "${filePath}"`;
+
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                logError('Falha no upload.');
+                return res.json({ success: false, output: stderr || error.message });
+            }
+            logSuccess('Upload realizado com sucesso!');
+            res.json({ success: true, output: stdout });
+        });
+
+    } catch (e) {
+        logError(e.message);
+        res.status(500).json({ success: false, output: e.message });
+    }
+});
+
+// Iniciar Servidor
 app.listen(PORT, () => {
-    console.log('=============================================');
-    console.log(`⚡ MyMaker Connector rodando na porta ${PORT}`);
-    console.log('   Mantenha esta janela aberta para usar a IDE.');
-    console.log('=============================================');
+    showWelcomeScreen();
 });
