@@ -77,6 +77,12 @@ html, body { height: 100%; font-family: var(--font-stack); background: var(--bg-
 }
 .side-menu.open { left: 0; }
 
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre o hambúrguer e o texto */
+}
+
 .side-menu-header {
   padding: 20px; border-bottom: 1px solid var(--border-color);
   display: flex; justify-content: space-between; align-items: center;
@@ -133,7 +139,7 @@ button:active { transform: scale(0.97); }
 .secondary-btn { background: #2f2e3e; border: 1px solid var(--border-color); color: var(--text-main); padding: 9px 20px; font-weight: 600; }
 .secondary-btn:hover { background: var(--bg-input); border-color: #9b040436; color: var(--danger); }
 
-/* Tema Light adjustments for buttons */
+/* Tema Light adjustments */
 body.theme-light .secondary-btn { background: #e0e0e0; color: #333; }
 body.theme-light .secondary-btn:hover { background: #d0d0d05b; border-color: #9b040436; color: var(--danger);}
 
@@ -154,8 +160,7 @@ body.theme-light .secondary-btn:hover { background: #d0d0d05b; border-color: #9b
 .icon-btn:hover { transition: 0.4s; background: rgba(255, 255, 255, 0.075); border-color: var(--border-color);}
 
 body.theme-light .icon-btn:hover { background: rgba(0, 0, 0, 0.05); border-color: #9c9c9c; }
-
-body.theme-light  .modal-header{color:#000000;}
+body.theme-light .modal-header { color: #000000; }
 
 .status-dot { height: 8px; width: 8px; background: #555; border-radius: 50%; display: inline-block; margin-right: 6px; }
 .status-online { background: var(--secondary); box-shadow: 0 0 8px var(--secondary); }
@@ -198,7 +203,6 @@ body.theme-light  .modal-header{color:#000000;}
 }
 .theme-card:hover { border-color: var(--primary); transform: translateY(-3px); }
 .theme-preview { width: 100%; height: 60px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #333; }
-/* Específico para visualização do card Light */
 .light-theme-card .theme-preview { border: 1px solid #ccc; }
 
 .config-box { width: 550px; padding: 0; }
@@ -221,33 +225,25 @@ body.theme-light  .modal-header{color:#000000;}
 /* Close buttons */
 .close-modal-tech {
   position: absolute; top: 20px; right: 20px; width: 34px; height: 34px;
-  background: none; /* Fundo transparente */
-  border: none; /* Garante que não tenha borda */
+  background: none; border: none;
   display: flex; align-items: center; justify-content: center; 
   transition: 0.2s; z-index: 10; cursor: pointer;
 }
 
-/* As linhas do X */
 .close-modal-tech::before, .close-modal-tech::after {
   content: ''; position: absolute; width: 14px; height: 2px; 
-  background: var(--text-muted); /* Cor original (cinza) */
-  border-radius: 2px;
-  transition: background 0.2s; /* Adicionei transição para a cor mudar suavemente */
+  background: var(--text-muted); border-radius: 2px;
+  transition: background 0.2s;
 }
 
 .close-modal-tech::before { transform: rotate(45deg); }
 .close-modal-tech::after { transform: rotate(-45deg); }
 
-/* Quando passar o mouse no botão, mude o fundo das LINHAS (o X) para vermelho */
 .close-modal-tech:hover::before,
 .close-modal-tech:hover::after {
   background: var(--danger); 
 }
-
-/* Opcional: Se quiser um fundo bem suave no botão ao passar o mouse */
-.close-modal-tech:hover {
-  transform: rotate(90deg); /* Efeito extra: girar ao passar o mouse */
-}
+.close-modal-tech:hover { transform: rotate(90deg); }
 
 /* ----------------------------------
    7. EXTRAS
@@ -290,14 +286,13 @@ body.theme-light  .modal-header{color:#000000;}
    FIX: ESTILO DO SELETOR DE PORTA
    ========================================= */
 #portInput {
-    appearance: none; /* Remove o estilo padrão feio do Windows */
-    -webkit-appearance: none;
+    appearance: none; -webkit-appearance: none;
     background-color: var(--bg-input);
-    color: var(--secondary); /* Cor verde neon/ciano */
+    color: var(--secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    padding: 0 35px 0 15px; /* Espaço extra na direita para a setinha */
-    height: 40px; /* Mesma altura dos botões */
+    padding: 0 35px 0 15px;
+    height: 40px;
     font-family: var(--font-code);
     font-weight: bold;
     cursor: pointer;
@@ -308,19 +303,61 @@ body.theme-light  .modal-header{color:#000000;}
     transition: all 0.2s ease;
 }
 
-#portInput:hover {
-    border-color: var(--secondary);
-    box-shadow: 0 0 10px rgba(97, 255, 202, 0.1);
+#portInput:hover { border-color: var(--secondary); box-shadow: 0 0 10px rgba(97, 255, 202, 0.1); }
+#portInput:focus { outline: none; border-color: var(--primary); }
+#portInput option { background-color: var(--bg-panel); color: var(--text-main); padding: 10px; }
+
+/* =========================================
+   📱 RESPONSIVIDADE (MOBILE & TABLET)
+   ========================================= */
+
+@media (max-width: 768px) {
+  .top-bar { height: auto; flex-wrap: wrap; padding: 10px; gap: 10px; }
+  .logo-section { width: 100%; justify-content: space-between; margin-bottom: 10px; }
+  .arduino-controls { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .arduino-controls button { flex: 1; padding: 8px; font-size: 12px; }
+  #agentStatus { display: none; }
+  .side-menu { width: 80%; max-width: 300px; }
+  .config-box, .modal-content { width: 95% !important; height: auto !important; max-height: 90vh; }
+  .theme-grid { grid-template-columns: 1fr; }
+  .modal-content { height: 90vh !important; }
+  .board-select { width: 100%; max-width: none; }
 }
 
-#portInput:focus {
-    outline: none;
-    border-color: var(--primary);
-}
+.menu-divider { border: 0; border-top: 1px solid var(--border-color); margin: 15px 0; display: none; }
 
-/* Estilo das opções internas (Suporte limitado pelos navegadores, mas ajuda) */
-#portInput option {
-    background-color: var(--bg-panel);
-    color: var(--text-main);
-    padding: 10px;
+/* =========================================
+   📱 RESPONSIVIDADE AVANÇADA (MOBILE)
+   ========================================= */
+@media (max-width: 850px) {
+    .top-bar { padding: 0 15px; justify-content: space-between; }
+    .desktop-slot { display: none; } /* Esconde os slots do PC */
+    .menu-divider { display: block; }
+
+    #mobileMenuSlot .arduino-controls,
+    #mobileMenuSlot .actions-section {
+        display: flex; flex-direction: column; width: 100%; gap: 10px; margin-bottom: 15px;
+    }
+
+    #mobileMenuSlot button, 
+    #mobileMenuSlot select,
+    #mobileMenuSlot input {
+        width: 100%; height: 45px; margin: 0; justify-content: center;
+    }
+
+    #mobileMenuSlot .arduino-controls {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+
+    #mobileMenuSlot #boardSelect,
+    #mobileMenuSlot #portInput,
+    #mobileMenuSlot #verifyBtn,
+    #mobileMenuSlot #uploadBtn {
+        grid-column: span 2;
+    }
+
+    #agentStatus { 
+        justify-content: center; margin-bottom: 10px; padding: 10px;
+        background: rgba(0,0,0,0.2); border-radius: var(--radius); grid-column: span 2;
+    }
 }

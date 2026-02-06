@@ -34,7 +34,7 @@ O diferencial deste projeto é a integração **Web-Hardware**: através de um *
 
 | Tema Aura (Dark/Neon) | Tema Light (Clean) |
 |:---------------------:|:------------------:|
-| <img src="image_d6076f.png" width="400" alt="Tema Aura"> | <img src="image_d6078d.png" width="400" alt="Tema Light"> |
+| <img src="" width="400" alt="Tema Aura"> | <img src="image_d6078d.png" width="400" alt="Tema Light"> |
 | *Editor Monaco Integrado (Dark)* | *Interface Clara para Sala de Aula* |
 
 ---
@@ -61,9 +61,3 @@ O diferencial deste projeto é a integração **Web-Hardware**: através de um *
 
 ### Passo 1: Iniciar o Agente Local
 O navegador não pode acessar o USB diretamente por segurança. O Agente faz essa ponte.
-
-```bash
-# Entre na pasta do agente
-cd backend
-npm install
-node agent.js

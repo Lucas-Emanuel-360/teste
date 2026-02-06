@@ -5,7 +5,6 @@ Blockly.setLocale(Blockly.Msg);
 // 1. GERENCIADOR DE TEMAS (JS + CSS)
 // =============================================================
 
-// Configurações específicas do Blockly para cada tema
 const themeConfigs = {
     aura: { 
         name: 'aura',
@@ -30,18 +29,14 @@ const themeConfigs = {
     }
 };
 
-// Variável para armazenar a instância do Monaco (Editor de Código)
 let monacoEditorInstance = null;
 
-// Função Principal de Troca de Tema
 function setTheme(themeName) {
     const config = themeConfigs[themeName] || themeConfigs.aura;
     
-    // 1. Atualiza Classes CSS no Body
     document.body.classList.remove('theme-aura', 'theme-light', 'theme-void');
     document.body.classList.add(`theme-${config.name}`);
 
-    // 2. Cria e Aplica Tema no Blockly
     const blocklyTheme = Blockly.Theme.defineTheme(`${config.name}Theme`, {
         'base': Blockly.Themes.Classic,
         'blockStyles': {
@@ -65,16 +60,13 @@ function setTheme(themeName) {
 
     workspace.setTheme(blocklyTheme);
 
-    // 3. Atualiza o Tema do Monaco (se já estiver carregado)
     if (monacoEditorInstance) {
         if (config.name === 'aura') monaco.editor.setTheme('aura-theme');
         if (config.name === 'light') monaco.editor.setTheme('light-theme');
         if (config.name === 'void') monaco.editor.setTheme('void-theme');
     }
 
-    // Salva preferência
     localStorage.setItem('roboblocks_theme', config.name);
-    
     toggleModal('themeModal', false);
     
     if (document.getElementById('themeModal').style.display === 'flex') {
@@ -93,7 +85,6 @@ const workspace = Blockly.inject('blocklyArea', {
   trashcan: true
 });
 
-// Aplica o tema salvo ou o padrão ao iniciar
 const savedTheme = localStorage.getItem('roboblocks_theme') || 'aura';
 setTheme(savedTheme);
 
@@ -149,7 +140,6 @@ let config = JSON.parse(localStorage.getItem('mymaker_config')) || {
   agentUrl: 'http://localhost:3000'
 };
 
-// Atualiza o código quando os blocos mudam
 workspace.addChangeListener(e => {
   if (e.type === Blockly.Events.UI) return;
   try {
@@ -157,7 +147,6 @@ workspace.addChangeListener(e => {
   } catch (err) { console.error(err); }
 });
 
-// Botão Configurações
 document.getElementById('settingsBtn').addEventListener('click', () => {
   document.getElementById('arduinoPathInput').value = config.arduinoPath;
   document.getElementById('agentUrlInput').value = config.agentUrl;
@@ -173,7 +162,6 @@ document.getElementById('saveConfigBtn').addEventListener('click', () => {
   showToast("Configurações salvas!");
 });
 
-// Checa status do Agente
 const agentDot = document.getElementById('agentDot');
 const agentStatusText = document.getElementById('agentStatus');
 
@@ -196,99 +184,50 @@ setInterval(checkAgentStatus, 2000);
 checkAgentStatus();
 
 // =============================================================
-// 5. INTEGRAÇÃO COM MONACO EDITOR (CUSTOMIZADO & EDITÁVEL)
+// 5. INTEGRAÇÃO COM MONACO EDITOR (CUSTOMIZADO & PROTEGIDO)
 // =============================================================
 
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+
+// Flags de controle
+let isManualEdit = false;     
+let isSystemUpdate = false;   
 
 function initMonaco() {
     return new Promise((resolve) => {
         require(['vs/editor/editor.main'], function () {
             
-            // --- 1. DEFINIÇÃO DOS TEMAS ---
-            
-            // AURA (Roxo/Dracula)
+            // Temas Personalizados
             monaco.editor.defineTheme('aura-theme', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [
-                    { token: 'comment', foreground: '6272a4', fontStyle: 'italic' },
-                    { token: 'keyword', foreground: 'ff79c6', fontStyle: 'bold' },
-                    { token: 'number', foreground: 'bd93f9' },
-                    { token: 'string', foreground: 'f1fa8c' },
-                    { token: 'type', foreground: '8be9fd' },
-                    { token: 'identifier', foreground: 'f8f8f2' }
-                ],
-                colors: {
-                    'editor.background': '#15141b',
-                    'editor.foreground': '#f8f8f2',
-                    'editorCursor.foreground': '#ff79c6',
-                    'editor.lineHighlightBackground': '#21202e',
-                    'editorLineNumber.foreground': '#6272a4',
-                    'editor.selectionBackground': '#44475a'
-                }
+                base: 'vs-dark', inherit: true,
+                rules: [{ token: 'comment', foreground: '6272a4', fontStyle: 'italic' }, { token: 'keyword', foreground: 'ff79c6', fontStyle: 'bold' }, { token: 'number', foreground: 'bd93f9' }, { token: 'string', foreground: 'f1fa8c' }, { token: 'type', foreground: '8be9fd' }, { token: 'identifier', foreground: 'f8f8f2' }],
+                colors: { 'editor.background': '#15141b', 'editor.foreground': '#f8f8f2', 'editorCursor.foreground': '#ff79c6', 'editor.lineHighlightBackground': '#21202e', 'editorLineNumber.foreground': '#6272a4', 'editor.selectionBackground': '#44475a' }
             });
-
-            // LIGHT (GitHub Style)
             monaco.editor.defineTheme('light-theme', {
-                base: 'vs',
-                inherit: true,
-                rules: [
-                    { token: 'comment', foreground: '6a737d', fontStyle: 'italic' },
-                    { token: 'keyword', foreground: 'd73a49', fontStyle: 'bold' },
-                    { token: 'string', foreground: '032f62' },
-                    { token: 'number', foreground: '005cc5' },
-                    { token: 'type', foreground: '6f42c1' }
-                ],
-                colors: {
-                    'editor.background': '#ffffff',
-                    'editor.foreground': '#24292e',
-                    'editorCursor.foreground': '#24292e',
-                    'editor.lineHighlightBackground': '#f6f8fa',
-                    'editorLineNumber.foreground': '#babbbd',
-                    'editor.selectionBackground': '#0366d625'
-                }
+                base: 'vs', inherit: true,
+                rules: [{ token: 'comment', foreground: '6a737d', fontStyle: 'italic' }, { token: 'keyword', foreground: 'd73a49', fontStyle: 'bold' }, { token: 'string', foreground: '032f62' }, { token: 'number', foreground: '005cc5' }, { token: 'type', foreground: '6f42c1' }],
+                colors: { 'editor.background': '#ffffff', 'editor.foreground': '#24292e', 'editorCursor.foreground': '#24292e', 'editor.lineHighlightBackground': '#f6f8fa', 'editorLineNumber.foreground': '#babbbd', 'editor.selectionBackground': '#0366d625' }
             });
-
-            // VOID (Cyberpunk/Matrix)
             monaco.editor.defineTheme('void-theme', {
-                base: 'vs-dark',
-                inherit: true,
-                rules: [
-                    { token: 'comment', foreground: '008800' },
-                    { token: 'keyword', foreground: '00ff41', fontStyle: 'bold' },
-                    { token: 'string', foreground: '00e5ff' },
-                    { token: 'number', foreground: 'bd93f9' },
-                    { token: 'type', foreground: '00ff41' },
-                    { token: 'identifier', foreground: 'cccccc' }
-                ],
-                colors: {
-                    'editor.background': '#000000',
-                    'editor.foreground': '#e0e0e0',
-                    'editorCursor.foreground': '#00ff41',
-                    'editor.lineHighlightBackground': '#111111',
-                    'editorLineNumber.foreground': '#333333',
-                    'editor.selectionBackground': '#003300'
-                }
+                base: 'vs-dark', inherit: true,
+                rules: [{ token: 'comment', foreground: '008800' }, { token: 'keyword', foreground: '00ff41', fontStyle: 'bold' }, { token: 'string', foreground: '00e5ff' }, { token: 'number', foreground: 'bd93f9' }, { token: 'type', foreground: '00ff41' }, { token: 'identifier', foreground: 'cccccc' }],
+                colors: { 'editor.background': '#000000', 'editor.foreground': '#e0e0e0', 'editorCursor.foreground': '#00ff41', 'editor.lineHighlightBackground': '#111111', 'editorLineNumber.foreground': '#333333', 'editor.selectionBackground': '#003300' }
             });
 
-            // --- 2. PREPARAÇÃO DO CONTAINER ---
             const container = document.getElementById('monacoEditorContainer');
-            container.innerHTML = ''; // Limpa o "Carregando..."
+            container.innerHTML = ''; // Limpa o "Iniciando..."
 
-            // --- 3. ESCOLHA DO TEMA INICIAL ---
             let saved = localStorage.getItem('roboblocks_theme') || 'aura';
             let initialTheme = 'aura-theme';
             if (saved === 'light') initialTheme = 'light-theme';
             if (saved === 'void') initialTheme = 'void-theme';
 
-            // --- 4. CRIAÇÃO DA INSTÂNCIA ---
             monacoEditorInstance = monaco.editor.create(container, {
                 value: '// Carregando código...',
                 language: 'cpp',
                 theme: initialTheme,
                 automaticLayout: true,
-                readOnly: false, // PERMITE EDIÇÃO MANUAL
+                readOnly: false, 
                 minimap: { enabled: true },
                 fontFamily: "'Fira Code', 'Consolas', monospace",
                 fontSize: 14,
@@ -298,40 +237,106 @@ function initMonaco() {
                 padding: { top: 20, bottom: 20 }
             });
 
+            // Detecta se o usuário digitou
+            monacoEditorInstance.onDidChangeModelContent(() => {
+                if (!isSystemUpdate) {
+                    isManualEdit = true;
+                }
+            });
+
             resolve(monacoEditorInstance);
         });
     });
 }
 
+// =============================================================
+// FUNÇÃO: DETECTOR DE ERROS (UNIVERSAL & ROBUSTO)
+// =============================================================
+function highlightErrors(logOutput) {
+    if (!monacoEditorInstance) return;
+
+    const model = monacoEditorInstance.getModel();
+    monaco.editor.setModelMarkers(model, "arduino-linter", []);
+
+    console.log(">>> Analisando log de erros...");
+
+    // Regex Universal: :LINHA:COLUNA: error:
+    const regex = /:(\d+):(\d+):\s*(?:fatal\s+)?error:\s*(.*)/gi;
+    
+    const markers = [];
+    let match;
+
+    while ((match = regex.exec(logOutput)) !== null) {
+        const line = parseInt(match[1]); 
+        const msg = match[3];            
+
+        console.log(`🚩 Erro detectado na linha ${line}: ${msg}`);
+
+        markers.push({
+            startLineNumber: line,
+            startColumn: 1,
+            endLineNumber: line,
+            endColumn: 1000, 
+            message: msg,
+            severity: monaco.MarkerSeverity.Error
+        });
+    }
+
+    if (markers.length === 0 && logOutput.includes("error:")) {
+        console.log("⚠️ Erro encontrado, mas sem número de linha claro.");
+    }
+
+    monaco.editor.setModelMarkers(model, "arduino-linter", markers);
+
+    if (markers.length > 0) {
+        monacoEditorInstance.revealLineInCenter(markers[0].startLineNumber);
+    }
+}
+
 // Botão "Ver Código"
 document.getElementById('showCodeBtn').addEventListener('click', async () => {
-    // 1. Pega o código mais recente dos blocos
-    try {
-        currentCode = arduinoGenerator.workspaceToCode(workspace);
-    } catch (e) { console.error(e); }
+    try { currentCode = arduinoGenerator.workspaceToCode(workspace); } catch (e) {}
 
-    // 2. Abre o Modal
     toggleModal('codeModal', true);
 
-    // 3. Inicia o Monaco se necessário
     if (!monacoEditorInstance) {
         document.getElementById('monacoEditorContainer').innerHTML = '<p style="color:#888; text-align:center; padding-top:20px;">Iniciando Monaco Editor...</p>';
         await initMonaco();
     }
 
-    // 4. Define o valor (Sempre sobrescreve com o dos blocos ao abrir para garantir sincronia inicial)
-    // Se quiser manter o que o usuário digitou antes, teria que fazer uma lógica extra aqui.
-    // Por enquanto, "Ver Código" reseta para a versão dos blocos.
-    monacoEditorInstance.setValue(currentCode);
-    
-    // Força refresh do layout
+    if (!isManualEdit) {
+        isSystemUpdate = true;
+        monacoEditorInstance.setValue(currentCode);
+        isSystemUpdate = false;
+    } else {
+        showToast("⚠️ Modo Manual: Edições preservadas.");
+    }
+
     setTimeout(() => monacoEditorInstance.layout(), 50);
+});
+
+// Botão "Restaurar Blocos"
+document.getElementById('resetCodeBtn').addEventListener('click', () => {
+    if(!confirm("Isso apagará suas edições manuais e trará o código dos blocos de volta. Confirmar?")) return;
+
+    currentCode = arduinoGenerator.workspaceToCode(workspace);
+    isManualEdit = false;
+    
+    isSystemUpdate = true;
+    monacoEditorInstance.setValue(currentCode);
+    isSystemUpdate = false;
+    
+    // Limpa erros visuais ao resetar
+    if (monacoEditorInstance) {
+        monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
+    }
+    
+    showToast("🔄 Sincronizado com os Blocos!");
 });
 
 document.getElementById('closeModalBtn').addEventListener('click', () => toggleModal('codeModal', false));
 
 document.getElementById('copyCodeBtn').addEventListener('click', () => {
-    // Copia do editor se ele existir, senão da variável
     const codeToCopy = monacoEditorInstance ? monacoEditorInstance.getValue() : currentCode;
     navigator.clipboard.writeText(codeToCopy);
     showToast("Código copiado!", "success");
@@ -341,7 +346,6 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
 // 6. SERIAL, PORTAS E UPLOAD
 // =============================================================
 
-// Monitor Serial
 const serialMonitor = document.getElementById('serialMonitor');
 document.getElementById('connectSerialBtn').addEventListener('click', async () => {
   if (!navigator.serial) return alert("Use Chrome ou Edge para Serial.");
@@ -364,12 +368,10 @@ document.getElementById('connectSerialBtn').addEventListener('click', async () =
 document.getElementById('closeSerialBtn').addEventListener('click', () => serialMonitor.classList.remove('open'));
 document.getElementById('clearSerialBtn').addEventListener('click', () => document.getElementById('serialOutput').innerHTML = '');
 
-// Listar Portas
 async function updateComPorts() {
     const portSelect = document.getElementById('portInput');
     portSelect.innerHTML = '<option value="">Porta COM</option>';
 
-    // Porta Falsa de Teste
     const fakeOption = document.createElement('option');
     fakeOption.value = "COM_TESTE";
     fakeOption.text = "🛠️ Porta Virtual (Teste)";
@@ -415,16 +417,15 @@ document.getElementById('portInput').addEventListener('change', async (e) => {
 updateComPorts();
 
 // =============================================================
-// 7. AÇÃO DE UPLOAD E VERIFICAR (COM SUPORTE A EDIÇÃO MANUAL)
+// 7. AÇÃO DE UPLOAD E VERIFICAR (COM SUPORTE A ERRO VISUAL)
 // =============================================================
 
-// Helper para pegar o código correto (Blocos ou Manual)
 function getFinalCode() {
-    // Se o modal estiver aberto, confiamos no Editor Manual
-    if (monacoEditorInstance && document.getElementById('codeModal').classList.contains('modal-visible')) {
-        return monacoEditorInstance.getValue();
+    // 1. Se o usuário editou manualmente ou a janela está aberta
+    if (isManualEdit || (monacoEditorInstance && document.getElementById('codeModal').classList.contains('modal-visible'))) {
+        if (monacoEditorInstance) return monacoEditorInstance.getValue();
     }
-    // Caso contrário, geramos dos blocos para garantir atualização
+    // 2. Senão, gera dos blocos
     return arduinoGenerator.workspaceToCode(workspace);
 }
 
@@ -439,10 +440,8 @@ document.getElementById('uploadBtn').addEventListener('click', async (e) => {
   
   if (!port || port === "") return showToast("⚠️ Selecione uma porta COM", "error");
 
-  // Decide qual código usar
   const codeToUpload = getFinalCode();
   
-  // Feedback Visual
   const btn = document.getElementById('uploadBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = `<span class="loading-spinner"></span> Enviando...`;
@@ -461,8 +460,20 @@ document.getElementById('uploadBtn').addEventListener('click', async (e) => {
     });
     
     const result = await response.json();
-    if (result.success) showToast("✅ Upload Concluído!", "success");
-    else alert("❌ Erro no Upload:\n\n" + result.output);
+    if (result.success) {
+        showToast("✅ Upload Concluído!", "success");
+        if (monacoEditorInstance) {
+            monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
+        }
+    } else {
+        alert("❌ Erro no Upload:\n\n" + result.output);
+        
+        toggleModal('codeModal', true);
+        setTimeout(() => {
+            if (!monacoEditorInstance) initMonaco().then(() => highlightErrors(result.output));
+            else highlightErrors(result.output);
+        }, 100);
+    }
     
   } catch (err) {
     showToast("Erro de comunicação com o Agente.", "error");
@@ -502,8 +513,17 @@ document.getElementById('verifyBtn').addEventListener('click', async (e) => {
         
         if (result.success) {
             showToast("✅ Código Compilado com Sucesso!", "success");
+            if (monacoEditorInstance) {
+                monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
+            }
         } else {
             alert("❌ Erro na Compilação:\n\n" + result.output);
+            
+            toggleModal('codeModal', true);
+            setTimeout(() => {
+                if (!monacoEditorInstance) initMonaco().then(() => highlightErrors(result.output));
+                else highlightErrors(result.output);
+            }, 100);
         }
 
     } catch (err) {
@@ -515,7 +535,6 @@ document.getElementById('verifyBtn').addEventListener('click', async (e) => {
     }
 });
 
-// Download do Agente
 document.getElementById('downloadAgentBtn').addEventListener('click', () => {
     const link = document.createElement('a');
     link.href = '../static/js/MyMakerConnector.exe'; 
@@ -555,7 +574,6 @@ document.getElementById('loadInput').addEventListener('change', (e) => {
     e.target.value = ''; 
 });
 
-// Exemplos Rápidos
 const xmlBlink = `<xml><block type="io_pin_mode" x="50" y="50"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><field name="MODE">OUTPUT</field><next><block type="controls_while"><value name="CONDITION"><block type="logic_boolean"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="io_digital_write"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><value name="STATE"><shadow type="io_high"></shadow></value><next><block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value><next><block type="io_digital_write"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><value name="STATE"><shadow type="io_low"></shadow></value><next><block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block></next></block></next></block></next></block></statement></block></next></block></xml>`;
 const xmlServo = `<xml><block type="controls_while" x="50" y="50"><value name="CONDITION"><block type="logic_boolean"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="servo_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="ANGLE"><shadow type="math_number"><field name="NUM">0</field></shadow></value><next><block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value><next><block type="servo_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="ANGLE"><shadow type="math_number"><field name="NUM">180</field></shadow></value><next><block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block></next></block></next></block></next></block></statement></block></xml>`;
 const xmlPot = `<xml><block type="controls_while" x="50" y="50"><value name="CONDITION"><block type="logic_boolean"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="io_serial_print"><value name="TEXT"><block type="io_analog_read"><value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block></value><next><block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">100</field></shadow></value></block></next></block></statement></block></xml>`;
@@ -571,3 +589,37 @@ workspace.registerButtonCallback('LOAD_BLINK', () => loadExample(xmlBlink));
 workspace.registerButtonCallback('LOAD_SERVO', () => loadExample(xmlServo));
 workspace.registerButtonCallback('LOAD_POT', () => loadExample(xmlPot));
 document.getElementById('clearBtn')?.addEventListener('click', () => { if(confirm("Apagar tudo?")) workspace.clear(); });
+
+// =============================================================
+// 9. RESPONSIVIDADE: TELETRANSPORTE DE DOM
+// =============================================================
+
+function handleResponsiveLayout() {
+    const width = window.innerWidth;
+    const mobileBreakpoint = 850;
+
+    const controlsBlock = document.getElementById('arduinoControlsBlock');
+    const actionsBlock = document.getElementById('actionsBlock');
+
+    const desktopControlsSlot = document.getElementById('desktopControlsSlot');
+    const desktopActionsSlot = document.getElementById('desktopActionsSlot');
+    const mobileMenuSlot = document.getElementById('mobileMenuSlot');
+
+    if (width <= mobileBreakpoint) {
+        // MODO MOBILE: Move para o menu
+        if (controlsBlock.parentElement !== mobileMenuSlot) {
+            mobileMenuSlot.appendChild(controlsBlock);
+            mobileMenuSlot.appendChild(actionsBlock);
+        }
+    } else {
+        // MODO DESKTOP: Volta para o header
+        if (controlsBlock.parentElement !== desktopControlsSlot) {
+            desktopControlsSlot.appendChild(controlsBlock);
+            desktopActionsSlot.appendChild(actionsBlock);
+        }
+    }
+}
+
+window.addEventListener('resize', handleResponsiveLayout);
+window.addEventListener('DOMContentLoaded', handleResponsiveLayout);
+handleResponsiveLayout();

@@ -18,45 +18,46 @@
 <body class="theme-aura">
 
   <header class="top-bar">
-    <div class="logo-section" style="display: flex; align-items: center;">
+    <div class="logo-section">
         <button id="menuBtn" class="hamburger-icon">☰</button>
         <div class="logo">RoboBlocks IDE</div>
     </div>
     
-    <div class="arduino-controls">
-        <div id="agentStatus" title="Status da Conexão Local">
-            <span class="status-dot" id="agentDot"></span> Conector
+    <div id="desktopControlsSlot" class="desktop-slot">
+        <div id="arduinoControlsBlock" class="arduino-controls">
+            <div id="agentStatus" title="Status da Conexão Local">
+                <span class="status-dot" id="agentDot"></span> Conector
+            </div>
+
+            <select id="boardSelect" class="board-select">
+                <option value="uno">Arduino Uno</option>
+                <option value="nano">Arduino Nano</option>
+                <option value="mega">Arduino Mega 2560</option>
+            </select>
+            
+            <select id="portInput" class="board-select">
+                <option value="">Porta COM</option>
+            </select>
+            <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
+            
+            <button id="verifyBtn" class="secondary-btn" title="Verificar Código">✔️ Verificar</button>
+            <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
+            
+            <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
+            
+            <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
+            <button id="saveBtn" class="icon-btn" title="Salvar Projeto">💾</button>
+            <button id="loadBtn" class="icon-btn" title="Abrir Projeto">📂</button>
         </div>
-
-        <select id="boardSelect" class="board-select">
-            <option value="uno">Arduino Uno</option>
-            <option value="nano">Arduino Nano</option>
-            <option value="mega">Arduino Mega 2560</option>
-        </select>
-        
-        <select id="portInput" class="board-select">
-            <option value="">Porta COM</option>
-        </select>
-        <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
-        
-        <button id="verifyBtn" class="secondary-btn" title="Verificar Código (Compilar)">
-            ✔️ Verificar
-        </button>
-
-        <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
-        
-        <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
-        
-        <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
-        <button id="saveBtn" class="icon-btn" title="Salvar Projeto">💾</button>
-        <button id="loadBtn" class="icon-btn" title="Abrir Projeto">📂</button>
     </div>
 
     <div class="spacer"></div> 
     
-    <div class="actions-section">
-      <button class="secondary-btn" id="connectSerialBtn">🔌 Monitor Serial</button>
-      <button class="primary-btn" id="showCodeBtn">▶ Ver Código</button>
+    <div id="desktopActionsSlot" class="desktop-slot">
+        <div id="actionsBlock" class="actions-section">
+            <button class="secondary-btn" id="connectSerialBtn">🔌 Monitor</button>
+            <button class="primary-btn" id="showCodeBtn">▶ Código</button>
+        </div>
     </div>
   </header>
 
@@ -65,15 +66,15 @@
         <h3>Menu</h3>
         <button id="closeMenuBtn" class="icon-btn" style="font-size: 18px;">✕</button>
     </div>
+    
     <div class="side-menu-body">
-        <button id="openThemeModalBtn" class="menu-item">
-            🎨 Mudar Tema
-        </button>
+        <button id="openThemeModalBtn" class="menu-item">🎨 Mudar Tema</button>
+        <button id="downloadAgentBtn" class="menu-item">⬇️ Baixar Conector (.exe)</button>
+        
+        <hr class="menu-divider">
 
-        <button id="downloadAgentBtn" class="menu-item">
-    ⬇️ Baixar Conector (.exe)
-</button>
-        </div>
+        <div id="mobileMenuSlot"></div>
+    </div>
   </div>
 
   <div class="main-layout">
@@ -91,7 +92,7 @@
     </main>
   </div>
 
-<div id="themeModal" class="config-modal" style="display: none;">
+  <div id="themeModal" class="config-modal" style="display: none;">
     <div class="config-box">
         <div class="config-header">
             <h2>🎨 Escolha um Tema</h2>
@@ -114,9 +115,9 @@
             <button id="closeThemeBtn" class="secondary-btn">Fechar</button>
         </div>
     </div>
-</div>
+  </div>
 
-<div id="configModal" class="config-modal" style="display: none;">
+  <div id="configModal" class="config-modal" style="display: none;">
     <div class="config-box">
         <div class="config-header">
             <h2>⚙️ Configuração do Sistema</h2>
@@ -141,28 +142,9 @@
             <button id="saveConfigBtn" class="primary-btn save-btn-tech">💾 Salvar Alterações</button>
         </div>
     </div>
-</div>
+  </div>
 
-<!-- <div id="codeModal" class="modal" style="display: none;">
-    <div class="modal-content" style="position: relative;">
-        
-        <button id="closeModalBtn" class="close-modal-tech" title="Fechar"></button>
-
-        <div class="modal-header">
-            <h2 style="margin: 0; padding-right: 40px;">💻 Código C++ Gerado</h2>
-        </div>
-        
-        <div class="modal-body">
-            <pre><code id="codeViewer"></code></pre>
-        </div>
-        
-        <div class="modal-footer">
-            <button id="copyCodeBtn" class="primary-btn copy-btn-tech">📋 Copiar Código</button>
-        </div>
-    </div>
-</div> -->
-
-<div id="codeModal" class="modal" style="display: none;">
+  <div id="codeModal" class="modal" style="display: none;">
     <div class="modal-content" style="position: relative; height: 80vh; width: 800px;">
         
         <button id="closeModalBtn" class="close-modal-tech" title="Fechar"></button>
@@ -175,12 +157,16 @@
             <div id="monacoEditorContainer" style="width: 100%; height: 100%;"></div>
         </div>
         
-        <div class="modal-footer">
+        <div class="modal-footer" style="justify-content: space-between;">
+            <button id="resetCodeBtn" class="secondary-btn" title="Descartar alterações manuais">
+                🔄 Restaurar Blocos
+            </button>
             <button id="copyCodeBtn" class="primary-btn copy-btn-tech">📋 Copiar Código</button>
         </div>
     </div>
-</div>
-<xml id="toolbox" style="display: none">
+  </div>
+
+  <xml id="toolbox" style="display: none">
     <category name="Exemplos" colour="#F39C12">
       <button text="Piscar LED (Blink)" callbackKey="LOAD_BLINK"></button>
       <button text="Controlar Servo" callbackKey="LOAD_SERVO"></button>
