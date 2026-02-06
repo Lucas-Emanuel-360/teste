@@ -9,6 +9,7 @@
   </p>
 
   <p>
+    <a href="#-sobre-o-projeto">Sobre</a> •
     <a href="#-funcionalidades">Funcionalidades</a> •
     <a href="#-como-usar">Como Usar</a> •
     <a href="#-tecnologias">Tecnologias</a> •
@@ -17,7 +18,7 @@
 
   ![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-a277ff?style=for-the-badge)
   ![License](https://img.shields.io/badge/License-MIT-61ffca?style=for-the-badge&labelColor=15141b)
-  ![Version](https://img.shields.io/badge/Version-1.0.0-ffca85?style=for-the-badge&labelColor=15141b)
+  ![Version](https://img.shields.io/badge/Version-2.0.0-ffca85?style=for-the-badge&labelColor=15141b)
 
 </div>
 
@@ -27,45 +28,42 @@
 
 O **RoboBlocks** é uma ferramenta desenvolvida para facilitar o ensino de robótica e lógica de programação. Diferente da IDE padrão do Arduino, que exige conhecimento de sintaxe C++, o RoboBlocks utiliza uma interface visual de "arrastar e soltar" (baseada no Google Blockly), tornando a programação acessível para crianças e iniciantes.
 
-O diferencial deste projeto é a integração **Web-Hardware**: através de um *Agente Local (Connector)*, o navegador consegue compilar e enviar o código diretamente para a placa Arduino via USB.
+O diferencial deste projeto é a integração **Web-Hardware**: através de um *Agente Local (Connector)*, o navegador consegue compilar, verificar e enviar o código diretamente para a placa Arduino via USB.
 
 ### 📸 Screenshots
 
-<div style = "text-align=center">
-  <img src="image_a44a21.png" alt="Interface Principal - Tema Aura" width="800">
-  <br>
-  <em>Interface Principal com o tema escuro "Aura"</em>
-</div>
+| Tema Aura (Dark/Neon) | Tema Light (Clean) |
+|:---------------------:|:------------------:|
+| <img src="image_d6076f.png" width="400" alt="Tema Aura"> | <img src="image_d6078d.png" width="400" alt="Tema Light"> |
+| *Editor Monaco Integrado (Dark)* | *Interface Clara para Sala de Aula* |
 
 ---
 
 ## ✨ Funcionalidades
 
 - **🧩 Programação em Blocos:** Interface intuitiva onde a lógica é construída encaixando peças.
-- **⚡ Upload Direto:** Envie o código para o Arduino (Uno, Nano, Mega) com apenas um clique.
+- **💻 Editor Híbrido (Monaco):** - Visualize o código C++ gerado em tempo real.
+    - **Edição Manual:** Permite digitar código diretamente (para usuários avançados).
+    - Syntax Highlighting profissional (mesmo motor do VS Code).
+- **⚡ Upload & Verificação:** Compile e envie o código para o Arduino (Uno, Nano, Mega) com um clique.
 - **🔌 Monitor Serial Web:** Visualize os dados enviados pelo Arduino em tempo real no navegador.
 - **🎨 Temas Personalizados:**
-  - `Aura` (Padrão: Roxo/Escuro)
-  - `Light` (Claro/Clean)
-  - `Void` (Alto Contraste/OLED)
-- **💻 Visualizador de Código:** Veja o código C++ sendo gerado em tempo real enquanto monta os blocos.
-- **🛠️ Modo Simulação:** Teste o fluxo de envio sem precisar da placa conectada.
+  - `Aura` (Padrão: Roxo/Cyberpunk)
+  - `Light` (Claro/GitHub Style)
+  - `Void` (Alto Contraste/Matrix)
 
 ---
 
-## 🏗 Arquitetura do Sistema
+## 🚀 Como Usar
 
-O projeto funciona em duas partes que conversam entre si:
+### Pré-requisitos
+1. **Arduino IDE** instalada (para fornecer o compilador `arduino_debug.exe`).
 
-1.  **Frontend (Web):** A interface onde o usuário monta os blocos. Feita em HTML/JS puro, roda no navegador.
-2.  **Backend (Agente Local):** Um serviço em Node.js (ou executável `.exe`) que roda no computador do usuário. Ele serve como uma "ponte":
-    * Recebe o código C++ do navegador via HTTP.
-    * Salva o arquivo `.ino`.
-    * Chama o `arduino_debug.exe` (CLI) para compilar e fazer o upload via USB.
+### Passo 1: Iniciar o Agente Local
+O navegador não pode acessar o USB diretamente por segurança. O Agente faz essa ponte.
 
-```mermaid
-graph LR
-    A[Navegador Web] -- JSON (Código + Porta) --> B[Agente Local (Porta 3000)]
-    B -- Cria Arquivo --> C[sketch_temp.ino]
-    B -- Executa Comando --> D[Arduino CLI / Debug]
-    D -- Upload via USB --> E[Placa Arduino]
+```bash
+# Entre na pasta do agente
+cd backend
+npm install
+node agent.js
