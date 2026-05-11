@@ -138,6 +138,8 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#4A90E2",
     "tooltip": "Estado LOW (0)"
   },
+
+  // Bloco: Tom (Buzzer)
   {
     "type": "io_tone",
     "message0": "tocar nota pino %1 freq %2 Hz tempo %3 ms",
@@ -148,7 +150,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#4A90E2", // Azul IO
+    "colour": "#4A90E2",
     "inputsInline": true,
     "tooltip": "Emite um som no buzzer"
   },
@@ -171,21 +173,22 @@ Blockly.defineBlocksWithJsonArray([
     "type": "time_millis",
     "message0": "tempo decorrido (ms)",
     "output": "Number",
-    "colour": "#5BA55B", // Verde (Matemática/Tempo)
+    "colour": "#5BA55B",
     "tooltip": "Retorna o tempo desde que o Arduino ligou"
   },
-//Bloco: Pulse In
+
+  // Bloco: Pulse In
   {
-  "type": "io_pulsein",
-  "message0": "ler pulso no pino %1 estado %2 timeout %3",
-  "args0": [
-    { "type": "input_value", "name": "PIN", "check": "Number" },
-    { "type": "field_dropdown", "name": "STATE", "options": [["ALTO", "HIGH"], ["BAIXO", "LOW"]] },
-    { "type": "input_value", "name": "TIMEOUT", "check": "Number" } // Opcional, mas bom ter
-  ],
-  "output": "Number",
-  "colour": "#4A90E2",
-  "inputsInline": true,
-  "tooltip": "Lê a duração de um pulso (em microssegundos). Útil para ultrassônico."
-}
+    "type": "io_pulsein",
+    "message0": "ler pulso no pino %1 estado %2 timeout %3",
+    "args0": [
+      { "type": "input_value", "name": "PIN", "check": "Number" },
+      { "type": "field_dropdown", "name": "STATE", "options": [["ALTO", "HIGH"], ["BAIXO", "LOW"]] },
+      { "type": "input_value", "name": "TIMEOUT", "check": "Number" }
+    ],
+    "output": "Number",
+    "colour": "#4A90E2",
+    "inputsInline": true,
+    "tooltip": "Lê a duração de um pulso (em microssegundos). Útil para ultrassônico."
+  }
 ]);

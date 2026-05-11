@@ -7,27 +7,29 @@ arduinoGenerator.addReservedWords(
 );
 
 // Ordem de precedência
-arduinoGenerator.ORDER_ATOMIC = 0;
+arduinoGenerator.ORDER_ATOMIC        = 0;
 arduinoGenerator.ORDER_UNARY_POSTFIX = 1;
-arduinoGenerator.ORDER_UNARY_PREFIX = 2;
+arduinoGenerator.ORDER_UNARY_PREFIX  = 2;
 arduinoGenerator.ORDER_MULTIPLICATION = 3;
-arduinoGenerator.ORDER_ADDITION = 4;
-arduinoGenerator.ORDER_RELATIONAL = 6;
-arduinoGenerator.ORDER_EQUALITY = 7;
-arduinoGenerator.ORDER_LOGICAL_AND = 11;
-arduinoGenerator.ORDER_LOGICAL_OR = 12;
-arduinoGenerator.ORDER_ASSIGNMENT = 14;
-arduinoGenerator.ORDER_NONE = 99;
+arduinoGenerator.ORDER_DIVISION      = 3;  // BUG FIX: estava faltando (mesmo nível que multiplicação)
+arduinoGenerator.ORDER_ADDITION      = 4;
+arduinoGenerator.ORDER_SUBTRACTION   = 4;  // BUG FIX: estava faltando (mesmo nível que adição)
+arduinoGenerator.ORDER_RELATIONAL    = 6;
+arduinoGenerator.ORDER_EQUALITY      = 7;
+arduinoGenerator.ORDER_LOGICAL_AND   = 11;
+arduinoGenerator.ORDER_LOGICAL_OR    = 12;
+arduinoGenerator.ORDER_ASSIGNMENT    = 14;
+arduinoGenerator.ORDER_NONE          = 99;
 
 /**
  * Inicializa o gerador.
  */
 arduinoGenerator.init = function(workspace) {
   arduinoGenerator.definitions_ = Object.create(null);
-  
-  // AGORA TEMOS DUAS LISTAS DE SETUP:
+
+  // DUAS LISTAS DE SETUP:
   arduinoGenerator.setups_vars_ = Object.create(null); // 1. Inicialização de variáveis (a = 24)
-  arduinoGenerator.setups_ = Object.create(null);      // 2. Configurações de hardware (pinMode)
+  arduinoGenerator.setups_      = Object.create(null); // 2. Configurações de hardware (pinMode)
 
   if (!arduinoGenerator.nameDB_) {
     arduinoGenerator.nameDB_ = new Blockly.Names(arduinoGenerator.RESERVED_WORDS_);
@@ -53,7 +55,7 @@ arduinoGenerator.finish = function(code) {
   for (const name in arduinoGenerator.setups_vars_) {
     setupsVars.push(arduinoGenerator.setups_vars_[name]);
   }
-  
+
   // 3. Setup de Hardware (pinMode...) - Roda DEPOIS
   const setupsHW = [];
   for (const name in arduinoGenerator.setups_) {
@@ -62,23 +64,21 @@ arduinoGenerator.finish = function(code) {
 
   // Montagem do Código
   let finalCode = '// Código Gerado pelo Robôblocks\n\n';
-  
+
   if (defsCode) finalCode += defsCode + '\n\n';
-  
+
   finalCode += 'void setup() {\n';
-  
-  // Imprime atribuições de variáveis primeiro
+
   if (setupsVars.length > 0) {
     finalCode += '  ' + setupsVars.join('\n  ') + '\n';
   }
-  
-  // Imprime configurações de hardware depois
+
   if (setupsHW.length > 0) {
     finalCode += '  ' + setupsHW.join('\n  ') + '\n';
   }
-  
+
   finalCode += '}\n\n';
-  
+
   finalCode += 'void loop() {\n';
   finalCode += code;
   finalCode += '}';
