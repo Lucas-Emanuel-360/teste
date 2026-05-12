@@ -75,7 +75,7 @@ function setTheme(themeName) {
 }
 
 // =============================================================
-// 2. INICIALIZAÇÃO DO WORKSPACE
+// 2. INICIALIZAÇÃO DO WORKSPACE E AUTO-SAVE 
 // =============================================================
 const workspace = Blockly.inject('blocklyArea', {
   toolbox: document.getElementById('toolbox'),
@@ -90,6 +90,26 @@ setTheme(savedTheme);
 
 setTimeout(() => { Blockly.svgResize(workspace); }, 100);
 window.addEventListener('resize', () => Blockly.svgResize(workspace));
+
+// Restaura o Auto-Save ao carregar a página
+const autoSaveXml = localStorage.getItem('roboblocks_autosave');
+if (autoSaveXml) {
+    try {
+        Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(autoSaveXml), workspace);
+        setTimeout(() => showToast("💾 Projeto restaurado automaticamente!"), 1000);
+    } catch (e) { console.error("Erro ao restaurar autosave", e); }
+}
+
+// Lógica do Empty State
+function checkEmptyState() {
+    const emptyStateEl = document.getElementById('emptyState');
+    if (workspace.getAllBlocks().length === 0) {
+        emptyStateEl.classList.add('show');
+    } else {
+        emptyStateEl.classList.remove('show');
+    }
+}
+checkEmptyState(); // Check inicial
 
 // =============================================================
 // 3. MENU E HELPERS UI
@@ -129,21 +149,36 @@ function toggleModal(modalId, show) {
     }
 }
 
+function showErrorModal(logOutput) {
+    document.getElementById('errorMessageText').innerText = logOutput;
+    toggleModal('errorModal', true);
+}
+document.getElementById('closeErrorBtn').addEventListener('click', () => toggleModal('errorModal', false));
+document.getElementById('viewErrorInCodeBtn').addEventListener('click', () => {
+    toggleModal('errorModal', false);
+    toggleModal('codeModal', true);
+});
+
 // =============================================================
-// 4. CONFIGURAÇÃO E AGENTE
+// 4. CONFIGURAÇÃO E AGENTE (Integração CLI nativa)
 // =============================================================
 let currentCode = '';
 let isAgentOnline = false;
 
+// MUDANÇA: O caminho padrão agora busca apenas arduino-cli.exe na raiz do agente
 let config = JSON.parse(localStorage.getItem('mymaker_config')) || {
-  arduinoPath: 'C:\\Program Files (x86)\\Arduino\\arduino_debug.exe',
+  arduinoPath: 'arduino-cli.exe',
   agentUrl: 'http://localhost:3000'
 };
 
+// Escuta mudanças: Gera código C++ e salva XML no localStorage
 workspace.addChangeListener(e => {
   if (e.type === Blockly.Events.UI) return;
+  checkEmptyState();
   try {
     currentCode = arduinoGenerator.workspaceToCode(workspace);
+    const xml = Blockly.Xml.workspaceToDom(workspace);
+    localStorage.setItem('roboblocks_autosave', Blockly.Xml.domToText(xml));
   } catch (err) { console.error(err); }
 });
 
@@ -184,12 +219,11 @@ setInterval(checkAgentStatus, 2000);
 checkAgentStatus();
 
 // =============================================================
-// 5. INTEGRAÇÃO COM MONACO EDITOR (CUSTOMIZADO & PROTEGIDO)
+// 5. INTEGRAÇÃO COM MONACO EDITOR
 // =============================================================
 
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
 
-// Flags de controle
 let isManualEdit = false;     
 let isSystemUpdate = false;   
 
@@ -197,7 +231,6 @@ function initMonaco() {
     return new Promise((resolve) => {
         require(['vs/editor/editor.main'], function () {
             
-            // Temas Personalizados
             monaco.editor.defineTheme('aura-theme', {
                 base: 'vs-dark', inherit: true,
                 rules: [{ token: 'comment', foreground: '6272a4', fontStyle: 'italic' }, { token: 'keyword', foreground: 'ff79c6', fontStyle: 'bold' }, { token: 'number', foreground: 'bd93f9' }, { token: 'string', foreground: 'f1fa8c' }, { token: 'type', foreground: '8be9fd' }, { token: 'identifier', foreground: 'f8f8f2' }],
@@ -215,7 +248,7 @@ function initMonaco() {
             });
 
             const container = document.getElementById('monacoEditorContainer');
-            container.innerHTML = ''; // Limpa o "Iniciando..."
+            container.innerHTML = '';
 
             let saved = localStorage.getItem('roboblocks_theme') || 'aura';
             let initialTheme = 'aura-theme';
@@ -237,7 +270,6 @@ function initMonaco() {
                 padding: { top: 20, bottom: 20 }
             });
 
-            // Detecta se o usuário digitou
             monacoEditorInstance.onDidChangeModelContent(() => {
                 if (!isSystemUpdate) {
                     isManualEdit = true;
@@ -249,18 +281,12 @@ function initMonaco() {
     });
 }
 
-// =============================================================
-// FUNÇÃO: DETECTOR DE ERROS (UNIVERSAL & ROBUSTO)
-// =============================================================
 function highlightErrors(logOutput) {
     if (!monacoEditorInstance) return;
 
     const model = monacoEditorInstance.getModel();
     monaco.editor.setModelMarkers(model, "arduino-linter", []);
 
-    console.log(">>> Analisando log de erros...");
-
-    // Regex Universal: :LINHA:COLUNA: error:
     const regex = /:(\d+):(\d+):\s*(?:fatal\s+)?error:\s*(.*)/gi;
     
     const markers = [];
@@ -269,8 +295,6 @@ function highlightErrors(logOutput) {
     while ((match = regex.exec(logOutput)) !== null) {
         const line = parseInt(match[1]); 
         const msg = match[3];            
-
-        console.log(`🚩 Erro detectado na linha ${line}: ${msg}`);
 
         markers.push({
             startLineNumber: line,
@@ -282,21 +306,12 @@ function highlightErrors(logOutput) {
         });
     }
 
-    if (markers.length === 0 && logOutput.includes("error:")) {
-        console.log("⚠️ Erro encontrado, mas sem número de linha claro.");
-    }
-
     monaco.editor.setModelMarkers(model, "arduino-linter", markers);
-
-    if (markers.length > 0) {
-        monacoEditorInstance.revealLineInCenter(markers[0].startLineNumber);
-    }
+    if (markers.length > 0) monacoEditorInstance.revealLineInCenter(markers[0].startLineNumber);
 }
 
-// Botão "Ver Código"
 document.getElementById('showCodeBtn').addEventListener('click', async () => {
     try { currentCode = arduinoGenerator.workspaceToCode(workspace); } catch (e) {}
-
     toggleModal('codeModal', true);
 
     if (!monacoEditorInstance) {
@@ -311,26 +326,18 @@ document.getElementById('showCodeBtn').addEventListener('click', async () => {
     } else {
         showToast("⚠️ Modo Manual: Edições preservadas.");
     }
-
     setTimeout(() => monacoEditorInstance.layout(), 50);
 });
 
-// Botão "Restaurar Blocos"
 document.getElementById('resetCodeBtn').addEventListener('click', () => {
     if(!confirm("Isso apagará suas edições manuais e trará o código dos blocos de volta. Confirmar?")) return;
-
     currentCode = arduinoGenerator.workspaceToCode(workspace);
     isManualEdit = false;
-    
     isSystemUpdate = true;
     monacoEditorInstance.setValue(currentCode);
     isSystemUpdate = false;
     
-    // Limpa erros visuais ao resetar
-    if (monacoEditorInstance) {
-        monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
-    }
-    
+    if (monacoEditorInstance) monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
     showToast("🔄 Sincronizado com os Blocos!");
 });
 
@@ -342,30 +349,100 @@ document.getElementById('copyCodeBtn').addEventListener('click', () => {
     showToast("Código copiado!", "success");
 });
 
+function getFinalCode() {
+    if (isManualEdit || (monacoEditorInstance && document.getElementById('codeModal').classList.contains('modal-visible'))) {
+        if (monacoEditorInstance) return monacoEditorInstance.getValue();
+    }
+    return arduinoGenerator.workspaceToCode(workspace);
+}
+
+// Botão Baixar .ino
+document.getElementById('downloadInoBtn').addEventListener('click', () => {
+    const code = getFinalCode();
+    const blob = new Blob([code], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'RoboBlocks_Projeto.ino';
+    a.click();
+    showToast("Arquivo .ino baixado!");
+});
+
 // =============================================================
-// 6. SERIAL, PORTAS E UPLOAD
+// 6. SERIAL, PORTAS E UPLOAD (Atualizado p/ Baud Rate e Scroll)
 // =============================================================
 
 const serialMonitor = document.getElementById('serialMonitor');
+let currentPort = null;
+let serialWriter = null;
+let reader = null;
+let lineBuffer = ""; 
+
 document.getElementById('connectSerialBtn').addEventListener('click', async () => {
   if (!navigator.serial) return alert("Use Chrome ou Edge para Serial.");
+  
+  const baudRate = parseInt(document.getElementById('baudRateSelect').value);
+
   try {
-    const port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 9600 });
+    currentPort = await navigator.serial.requestPort();
+    await currentPort.open({ baudRate: baudRate });
     serialMonitor.classList.add('open');
     const output = document.getElementById('serialOutput');
-    output.innerHTML += `<div style="color: var(--secondary); border-bottom: 1px dashed #333; padding-bottom: 5px;">>>> Conectado (9600 baud) 🔌</div>`;
+    output.innerHTML += `<div style="color: var(--secondary); border-bottom: 1px dashed #333; padding-bottom: 5px;">>>> Conectado (${baudRate} baud) 🔌</div>`;
+    
+    const textEncoder = new TextEncoderStream();
+    textEncoder.readable.pipeTo(currentPort.writable);
+    serialWriter = textEncoder.writable.getWriter();
+
     const textDecoder = new TextDecoderStream();
-    port.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
+    currentPort.readable.pipeTo(textDecoder.writable);
+    reader = textDecoder.readable.getReader();
+
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-      if (value) { output.innerHTML += value; output.scrollTop = output.scrollHeight; }
+      if (value) {
+          const addTimestamp = document.getElementById('timestampCheck').checked;
+          const autoScroll = document.getElementById('autoScrollCheck').checked;
+          
+          if (addTimestamp) {
+              lineBuffer += value;
+              if (lineBuffer.includes('\n')) {
+                  const lines = lineBuffer.split('\n');
+                  lineBuffer = lines.pop(); // Guarda o fragmento final sem \n
+                  const time = new Date().toLocaleTimeString();
+                  lines.forEach(l => output.innerHTML += `<span style="color:#555">[${time}]</span> ${l}<br>`);
+              }
+          } else {
+              output.innerHTML += value.replace(/\n/g, '<br>');
+          }
+
+          if (autoScroll) output.scrollTop = output.scrollHeight;
+      }
     }
   } catch (e) { console.log("Erro Serial:", e); }
 });
-document.getElementById('closeSerialBtn').addEventListener('click', () => serialMonitor.classList.remove('open'));
+
+// Envio de Comando Serial
+document.getElementById('sendSerialBtn').addEventListener('click', async () => {
+    if (!serialWriter) return showToast("A porta serial não está conectada.", "error");
+    const inputEl = document.getElementById('serialInputText');
+    const dataToSend = inputEl.value + '\n';
+    try {
+        await serialWriter.write(dataToSend);
+        inputEl.value = ''; 
+    } catch (e) { showToast("Falha ao enviar dado.", "error"); }
+});
+
+document.getElementById('serialInputText').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('sendSerialBtn').click();
+});
+
+document.getElementById('closeSerialBtn').addEventListener('click', async () => {
+    serialMonitor.classList.remove('open');
+    if(reader) { await reader.cancel(); reader = null; }
+    if(serialWriter) { await serialWriter.close(); serialWriter = null; }
+    if(currentPort) { await currentPort.close(); currentPort = null; }
+});
 document.getElementById('clearSerialBtn').addEventListener('click', () => document.getElementById('serialOutput').innerHTML = '');
 
 async function updateComPorts() {
@@ -417,31 +494,18 @@ document.getElementById('portInput').addEventListener('change', async (e) => {
 updateComPorts();
 
 // =============================================================
-// 7. AÇÃO DE UPLOAD E VERIFICAR (COM SUPORTE A ERRO VISUAL)
+// 7. AÇÃO DE UPLOAD E VERIFICAR
 // =============================================================
 
-function getFinalCode() {
-    // 1. Se o usuário editou manualmente ou a janela está aberta
-    if (isManualEdit || (monacoEditorInstance && document.getElementById('codeModal').classList.contains('modal-visible'))) {
-        if (monacoEditorInstance) return monacoEditorInstance.getValue();
-    }
-    // 2. Senão, gera dos blocos
-    return arduinoGenerator.workspaceToCode(workspace);
-}
-
-// Botão UPLOAD
 document.getElementById('uploadBtn').addEventListener('click', async (e) => {
   e.preventDefault();
-  
   if (!isAgentOnline) return showToast("🔌 Conector Offline!", "error");
   
   const board = document.getElementById('boardSelect').value;
   const port = document.getElementById('portInput').value; 
-  
   if (!port || port === "") return showToast("⚠️ Selecione uma porta COM", "error");
 
   const codeToUpload = getFinalCode();
-  
   const btn = document.getElementById('uploadBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = `<span class="loading-spinner"></span> Enviando...`;
@@ -451,43 +515,30 @@ document.getElementById('uploadBtn').addEventListener('click', async (e) => {
     const response = await fetch(`${config.agentUrl}/upload`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-          code: codeToUpload, 
-          board: board, 
-          port: port,
-          arduinoPath: config.arduinoPath 
-      })
+      body: JSON.stringify({ code: codeToUpload, board: board, port: port, arduinoPath: config.arduinoPath })
     });
     
     const result = await response.json();
     if (result.success) {
         showToast("✅ Upload Concluído!", "success");
-        if (monacoEditorInstance) {
-            monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
-        }
+        if (monacoEditorInstance) monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
     } else {
-        alert("❌ Erro no Upload:\n\n" + result.output);
-        
-        toggleModal('codeModal', true);
+        showErrorModal(result.output);
         setTimeout(() => {
             if (!monacoEditorInstance) initMonaco().then(() => highlightErrors(result.output));
             else highlightErrors(result.output);
         }, 100);
     }
-    
   } catch (err) {
     showToast("Erro de comunicação com o Agente.", "error");
-    console.error(err);
   } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
 });
 
-// Botão VERIFICAR
 document.getElementById('verifyBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-
     if (!isAgentOnline) return showToast("🔌 Conector Offline!", "error");
 
     const board = document.getElementById('boardSelect').value;
@@ -502,33 +553,22 @@ document.getElementById('verifyBtn').addEventListener('click', async (e) => {
         const response = await fetch(`${config.agentUrl}/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                code: codeToVerify, 
-                board: board, 
-                arduinoPath: config.arduinoPath 
-            })
+            body: JSON.stringify({ code: codeToVerify, board: board, arduinoPath: config.arduinoPath })
         });
 
         const result = await response.json();
-        
         if (result.success) {
             showToast("✅ Código Compilado com Sucesso!", "success");
-            if (monacoEditorInstance) {
-                monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
-            }
+            if (monacoEditorInstance) monaco.editor.setModelMarkers(monacoEditorInstance.getModel(), "arduino-linter", []);
         } else {
-            alert("❌ Erro na Compilação:\n\n" + result.output);
-            
-            toggleModal('codeModal', true);
+            showErrorModal(result.output);
             setTimeout(() => {
                 if (!monacoEditorInstance) initMonaco().then(() => highlightErrors(result.output));
                 else highlightErrors(result.output);
             }, 100);
         }
-
     } catch (err) {
         showToast("Erro ao comunicar com o Agente.", "error");
-        console.error(err);
     } finally {
         btn.innerHTML = originalContent;
         btn.disabled = false;
@@ -537,8 +577,8 @@ document.getElementById('verifyBtn').addEventListener('click', async (e) => {
 
 document.getElementById('downloadAgentBtn').addEventListener('click', () => {
     const link = document.createElement('a');
-    link.href = '../static/js/MyMakerConnector.exe'; 
-    link.download = 'MyMakerConnector.exe';
+    link.href = '../static/js/RoboBlocksConnector.exe'; 
+    link.download = 'RoboBlocksConnector.exe';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -606,13 +646,11 @@ function handleResponsiveLayout() {
     const mobileMenuSlot = document.getElementById('mobileMenuSlot');
 
     if (width <= mobileBreakpoint) {
-        // MODO MOBILE: Move para o menu
         if (controlsBlock.parentElement !== mobileMenuSlot) {
             mobileMenuSlot.appendChild(controlsBlock);
             mobileMenuSlot.appendChild(actionsBlock);
         }
     } else {
-        // MODO DESKTOP: Volta para o header
         if (controlsBlock.parentElement !== desktopControlsSlot) {
             desktopControlsSlot.appendChild(controlsBlock);
             desktopActionsSlot.appendChild(actionsBlock);

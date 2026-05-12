@@ -28,6 +28,8 @@
             <div id="agentStatus" title="Status da Conexão Local">
                 <span class="status-dot" id="agentDot"></span> Conector
             </div>
+            
+            <div class="toolbar-divider"></div>
 
             <select id="boardSelect" class="board-select">
                 <option value="uno">Arduino Uno</option>
@@ -40,14 +42,17 @@
             </select>
             <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
             
+            <div class="toolbar-divider"></div>
+            
             <button id="verifyBtn" class="secondary-btn" title="Verificar Código">✔️ Verificar</button>
             <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
             
+            <div class="toolbar-divider"></div>
+
             <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
-            
             <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
-            <button id="saveBtn" class="icon-btn" title="Salvar Projeto">💾</button>
-            <button id="loadBtn" class="icon-btn" title="Abrir Projeto">📂</button>
+            <button id="saveBtn" class="icon-btn" title="Salvar Projeto (.xml)">💾</button>
+            <button id="loadBtn" class="icon-btn" title="Abrir Projeto (.xml)">📂</button>
         </div>
     </div>
 
@@ -78,18 +83,57 @@
   </div>
 
   <div class="main-layout">
-    <main class="workspace-container">
+    <main class="workspace-container" style="position: relative;">
+      
+      <div id="emptyState" class="empty-state">
+        ✨ Arraste os blocos aqui para começar!
+      </div>
+
       <div id="blocklyArea"></div>
       
       <div id="serialMonitor">
         <div class="serial-header">
-          <strong>📟 Monitor Serial (9600 baud)</strong>
-          <button id="closeSerialBtn">✕</button>
-          <button id="clearSerialBtn">Limpar</button>
+          <strong>📟 Monitor Serial</strong>
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <select id="baudRateSelect" class="board-select" style="padding: 4px; height: auto; min-width: 100px; font-size: 12px;">
+                <option value="9600">9600 baud</option>
+                <option value="19200">19200 baud</option>
+                <option value="38400">38400 baud</option>
+                <option value="115200">115200 baud</option>
+            </select>
+            <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="autoScrollCheck" checked> Scroll
+            </label>
+            <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="timestampCheck"> Hora
+            </label>
+            <button id="clearSerialBtn" class="secondary-btn" style="padding: 4px 10px; font-size: 12px; margin-left: 10px;">Limpar</button>
+            <button id="closeSerialBtn" class="icon-btn" style="width: 30px; height: 30px; display: inline-flex; font-size: 14px; margin-left: 5px;">✕</button>
+          </div>
         </div>
         <div id="serialOutput"></div>
+        <div class="serial-input-container">
+            <input type="text" id="serialInputText" placeholder="Digite um comando para enviar ao Arduino..." spellcheck="false">
+            <button id="sendSerialBtn" class="primary-btn">Enviar</button>
+        </div>
       </div>
     </main>
+  </div>
+
+  <div id="errorModal" class="config-modal" style="display: none;">
+    <div class="config-box" style="border-color: var(--danger);">
+        <div class="config-header" style="border-bottom-color: var(--danger);">
+            <h2>❌ Ops, ocorreu um erro!</h2>
+        </div>
+        <div class="config-body" style="max-height: 400px; overflow-y: auto;">
+            <p style="margin-bottom: 15px; color: var(--text-muted);">Verifique o código ou a conexão. Detalhes do erro abaixo:</p>
+            <pre id="errorMessageText" style="background: var(--bg-input); padding: 15px; border-radius: var(--radius); color: var(--danger); font-family: var(--font-code); font-size: 13px; white-space: pre-wrap; word-wrap: break-word;"></pre>
+        </div>
+        <div class="modal-footer">
+            <button id="closeErrorBtn" class="secondary-btn">Fechar</button>
+            <button id="viewErrorInCodeBtn" class="primary-btn" style="background: var(--danger);">Ver no Código</button>
+        </div>
+    </div>
   </div>
 
   <div id="themeModal" class="config-modal" style="display: none;">
@@ -125,9 +169,9 @@
         
         <div class="config-body">
             <div class="config-row">
-                <label>📂 Caminho do Arduino (Debug):</label>
-                <input type="text" id="arduinoPathInput" placeholder="C:\..." spellcheck="false">
-                <small>Local do executável <a style="color: rgba(0, 255, 255, 0.589);">arduino_debug.exe</a></small>
+                <label>📂 Caminho do Arduino CLI:</label>
+                <input type="text" id="arduinoPathInput" placeholder="arduino-cli.exe" spellcheck="false">
+                <small>Deixe apenas <a style="color: rgba(0, 255, 255, 0.589);">arduino-cli.exe</a> se estiver na mesma pasta do Agente.</small>
             </div>
             <br>
             <div class="config-row">
@@ -158,10 +202,15 @@
         </div>
         
         <div class="modal-footer" style="justify-content: space-between;">
-            <button id="resetCodeBtn" class="secondary-btn" title="Descartar alterações manuais">
-                🔄 Restaurar Blocos
-            </button>
-            <button id="copyCodeBtn" class="primary-btn copy-btn-tech">📋 Copiar Código</button>
+            <div>
+                <button id="resetCodeBtn" class="secondary-btn" title="Descartar alterações manuais">
+                    🔄 Restaurar Blocos
+                </button>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="downloadInoBtn" class="secondary-btn" title="Baixar arquivo .ino">⬇️ Baixar .ino</button>
+                <button id="copyCodeBtn" class="primary-btn copy-btn-tech">📋 Copiar Código</button>
+            </div>
         </div>
     </div>
   </div>
@@ -219,7 +268,7 @@
       <block type="text_join"></block>
       <block type="text_string_conv"></block>
     </category>
-<category name="Display LCD" colour="#D81B60">
+    <category name="Display LCD" colour="#D81B60">
       <block type="lcd_print_line">
         <value name="TEXT">
           <shadow type="text">
@@ -244,6 +293,7 @@
 
     <category name="Variáveis" colour="#FF6680" custom="VARIABLE"></category>
   </xml>
+  
   <script src="../static/js/blocks/blocks_definition/blocks_controls.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_io.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_logic.js"></script>

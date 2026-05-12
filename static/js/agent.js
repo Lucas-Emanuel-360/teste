@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 
-// Bibliotecas visuais (instalar: npm install chalk@4 boxen@5 figlet)
+// Bibliotecas visuais
 const chalk = require('chalk');
 const figlet = require('figlet');
 const boxen = require('boxen');
@@ -22,7 +22,6 @@ const logSuccess = (msg) => console.log(`${chalk.green('✔')} ${msg}`);
 const logError = (msg) => console.log(`${chalk.red('✖')} ${msg}`);
 const logWarn = (msg) => console.log(`${chalk.yellow('⚠')} ${msg}`);
 
-// Tela de Boas-vindas
 function showWelcomeScreen() {
     console.clear();
     console.log(
@@ -34,15 +33,26 @@ function showWelcomeScreen() {
     console.log(boxen(
         `${chalk.bold('Status:')} ${chalk.green('Online')} 🟢\n` +
         `${chalk.bold('Porta:')}  ${PORT}\n` +
-        `${chalk.bold('Modo:')}   Ready to Code`,
+        `${chalk.bold('Motor:')}  Arduino CLI (Integrado)`,
         { padding: 1, margin: 1, borderStyle: 'round', borderColor: 'cyan' }
     ));
     
-    logInfo('Aguardando comandos da IDE...');
+    logInfo('Verificando dependências do Arduino (pode demorar na 1ª vez)...');
+    
+    // Tenta instalar os cores automaticamente usando o executável local na mesma pasta
+    const cliPath = path.join(__dirname, 'arduino-cli.exe');
+    exec(`"${cliPath}" core install arduino:avr`, (err, stdout, stderr) => {
+        if (err) {
+            logWarn('Aviso: Não foi possível atualizar as placas. O arduino-cli.exe está na mesma pasta?');
+        } else {
+            logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
+        }
+        logInfo('Aguardando comandos da IDE pelo navegador...');
+    });
 }
 
-// === HELPER: Mapear Placa ===
-function getBoardPackage(boardName) {
+// === HELPER: Mapear Placa para FQBN do arduino-cli ===
+function getFQBN(boardName) {
     if (boardName === 'mega') return 'arduino:avr:mega';
     if (boardName === 'nano') return 'arduino:avr:nano';
     return 'arduino:avr:uno'; // Default UNO
@@ -55,13 +65,11 @@ function saveTempFile(code) {
     
     const filePath = path.join(sketchDir, 'sketch_temp.ino');
     fs.writeFileSync(filePath, code);
-    return filePath;
+    return sketchDir;
 }
 
-// Rota de Status
 app.get('/status', (req, res) => {
-    // Não vamos poluir o log com pings de status a cada 2 segundos
-    res.json({ status: 'online', version: '2.0.0' });
+    res.json({ status: 'online', engine: 'arduino-cli', version: '2.1.0' });
 });
 
 // === ROTA 1: VERIFICAR (COMPILAR) ===
@@ -69,8 +77,7 @@ app.post('/verify', (req, res) => {
     const { code, board, arduinoPath } = req.body;
     logInfo(`Pedido de Verificação (Compile) para: ${chalk.cyan(board)}`);
 
-    // Simulação
-    if (board === "COM_TESTE" || !arduinoPath) {
+    if (board === "COM_TESTE") {
         setTimeout(() => {
             logSuccess('Simulação de verificação concluída.');
             res.json({ success: true, output: "Modo Simulação: Código compilado com sucesso (Fake)." });
@@ -79,16 +86,18 @@ app.post('/verify', (req, res) => {
     }
 
     try {
-        const filePath = saveTempFile(code);
-        const boardPkg = getBoardPackage(board);
+        const sketchDir = saveTempFile(code);
+        const fqbn = getFQBN(board);
         
-        // Comando --verify (apenas compila)
-        const command = `"${arduinoPath}" --verify --board ${boardPkg} "${filePath}"`;
+        // Garante que pega do frontend ou tenta da pasta atual
+        const targetCli = arduinoPath || path.join(__dirname, 'arduino-cli.exe');
+        
+        const command = `"${targetCli}" compile --fqbn ${fqbn} "${sketchDir}"`;
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
                 logError('Erro na compilação.');
-                return res.json({ success: false, output: stderr || error.message });
+                return res.json({ success: false, output: stdout + "\n" + stderr });
             }
             logSuccess('Código verificado com sucesso!');
             res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
@@ -103,7 +112,6 @@ app.post('/verify', (req, res) => {
 app.post('/upload', (req, res) => {
     const { code, board, port, arduinoPath } = req.body;
     
-    // Simulação
     if (port === "COM_TESTE") {
         logWarn('Iniciando Upload Simulado...');
         setTimeout(() => {
@@ -120,16 +128,16 @@ app.post('/upload', (req, res) => {
     logInfo(`Iniciando Upload: ${chalk.cyan(board)} na porta ${chalk.yellow(port)}`);
 
     try {
-        const filePath = saveTempFile(code);
-        const boardPkg = getBoardPackage(board);
+        const sketchDir = saveTempFile(code);
+        const fqbn = getFQBN(board);
         
-        // Comando --upload
-        const command = `"${arduinoPath}" --upload --board ${boardPkg} --port ${port} "${filePath}"`;
+        const targetCli = arduinoPath || path.join(__dirname, 'arduino-cli.exe');
+        const command = `"${targetCli}" compile --upload --fqbn ${fqbn} -p ${port} "${sketchDir}"`;
 
         exec(command, (error, stdout, stderr) => {
             if (error) {
                 logError('Falha no upload.');
-                return res.json({ success: false, output: stderr || error.message });
+                return res.json({ success: false, output: stdout + "\n" + stderr });
             }
             logSuccess('Upload realizado com sucesso!');
             res.json({ success: true, output: stdout });
@@ -141,7 +149,6 @@ app.post('/upload', (req, res) => {
     }
 });
 
-// Iniciar Servidor
 app.listen(PORT, () => {
     showWelcomeScreen();
 });
