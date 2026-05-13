@@ -230,20 +230,26 @@
       <block type="controls_repeat"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
       <block type="controls_flow_statements"></block>
     </category>
-    <category name="Entrada/Saída" colour="#4A90E2">
-      <block type="io_pin_mode"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value></block>
-      <block type="io_digital_write"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><value name="STATE"><shadow type="io_high"></shadow></value></block>
-      <block type="io_digital_read"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value></block>
-      <block type="io_analog_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="VALUE"><shadow type="math_number"><field name="NUM">128</field></shadow></value></block>
+
+    <category name="Entrada" colour="#2980B9">
+      <block type="io_digital_read"><value name="PIN"><shadow type="math_number"><field name="NUM">2</field></shadow></value></block>
       <block type="io_analog_read"><value name="PIN"><shadow type="math_number"><field name="NUM">0</field></shadow></value></block>
       <block type="io_pulsein"><value name="PIN"><shadow type="math_number"><field name="NUM">7</field></shadow></value><value name="TIMEOUT"><shadow type="math_number"><field name="NUM">20000</field></shadow></value></block>
+      <block type="io_ultrasonic_read"><value name="TRIG"><shadow type="math_number"><field name="NUM">8</field></shadow></value><value name="ECHO"><shadow type="math_number"><field name="NUM">9</field></shadow></value></block>
+      <block type="time_millis"></block>
+    </category>
+
+    <category name="Saída" colour="#4A90E2">
+      <block type="io_pin_mode"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value></block>
+      <block type="io_digital_write"><value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value><value name="STATE"><shadow type="io_high"></shadow></value></block>
+      <block type="io_analog_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="VALUE"><shadow type="math_number"><field name="NUM">128</field></shadow></value></block>
       <block type="io_serial_print"><value name="TEXT"><shadow type="text"><field name="TEXT">Ola Mundo</field></shadow></value></block>
       <block type="io_tone"><value name="PIN"><shadow type="math_number"><field name="NUM">8</field></shadow></value><value name="FREQ"><shadow type="math_number"><field name="NUM">440</field></shadow></value><value name="DURATION"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block>
       <block type="io_notone"><value name="PIN"><shadow type="math_number"><field name="NUM">8</field></shadow></value></block>
-      <block type="time_millis"></block>
       <block type="io_high"></block>
       <block type="io_low"></block>
     </category>
+
     <category name="Servo" colour="#4A90E2">
       <block type="servo_write"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value><value name="ANGLE"><shadow type="math_number"><field name="NUM">90</field></shadow></value></block>
       <block type="servo_read"><value name="PIN"><shadow type="math_number"><field name="NUM">9</field></shadow></value></block>
@@ -295,7 +301,8 @@
   </xml>
   
   <script src="../static/js/blocks/blocks_definition/blocks_controls.js"></script>
-  <script src="../static/js/blocks/blocks_definition/blocks_io.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_entrada.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_saida.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_logic.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_math.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_variables.js"></script>
@@ -305,7 +312,8 @@
 
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/arduinoGenerator_setup.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_controls.js"></script>
-  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_io.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_entrada.js"></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_saida.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_logic.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_math.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_variables.js"></script>
