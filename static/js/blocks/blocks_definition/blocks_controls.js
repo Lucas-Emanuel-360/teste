@@ -56,6 +56,36 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#D94848",
     "tooltip": "Executa comandos se a condição for verdadeira"
   },
+  {
+    "type": "controls_if_else",
+    "message0": "se %1 então",
+    "args0": [
+      {
+        "type": "input_value",
+        "name": "CONDITION",
+        "check": "Boolean"
+      }
+    ],
+    "message1": "%1",
+    "args1": [
+      {
+        "type": "input_statement",
+        "name": "DO"
+      }
+    ],
+    "message2": "senão",
+    "message3": "%1",
+    "args3": [
+      {
+        "type": "input_statement",
+        "name": "ELSE"
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D94848",
+    "tooltip": "Executa os primeiros comandos se a condição for verdadeira; senão, executa os outros comandos."
+  },
 
   // Bloco: While (enquanto)
   {

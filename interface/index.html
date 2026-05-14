@@ -226,6 +226,7 @@
       <block type="controls_delay"><value name="DELAY_TIME"><shadow type="math_number"><field name="NUM">1000</field></shadow></value></block>
       <block type="controls_stop"></block>
       <block type="controls_if_simple"></block>
+      <block type="controls_if_else"></block>
       <block type="controls_while"></block>
       <block type="controls_repeat"><value name="TIMES"><shadow type="math_number"><field name="NUM">10</field></shadow></value></block>
       <block type="controls_flow_statements"></block>
@@ -284,6 +285,21 @@
       </block>
       <block type="lcd_clear_display"></block>
     </category>
+    <category name="Carrinho" colour="#E67E22">
+    <block type="carrinho_setup">
+        <value name="ESQ_FRENTE"><block type="math_number"><field name="NUM">10</field></block></value>
+        <value name="ESQ_TRAS"><block type="math_number"><field name="NUM">9</field></block></value>
+        <value name="DIR_FRENTE"><block type="math_number"><field name="NUM">5</field></block></value>
+        <value name="DIR_TRAS"><block type="math_number"><field name="NUM">6</field></block></value>
+    </block>
+    <block type="carrinho_frente"></block>
+    <block type="carrinho_tras"></block>
+    <block type="carrinho_esquerda"></block>
+    <block type="carrinho_direita"></block>
+    <block type="carrinho_aleatorio"></block>
+    <block type="carrinho_parar"></block>
+    <block type="carrinho_finalizar"></block>
+</category>
 
     <category name="Caixinha" colour="#00C060">
       <block type="caixinha_led_on"></block>
@@ -309,6 +325,7 @@
   <script src="../static/js/blocks/blocks_definition/blocks_servo.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_text.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_caixinha.js"></script>
+  <script src="../static/js/blocks/blocks_definition/blocks_carrinho.js"></script>
 
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/arduinoGenerator_setup.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_controls.js"></script>
@@ -320,6 +337,7 @@
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_servo.js"></script> 
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_text.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_caixinha.js" ></script>
+  <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_carrinho.js"></script>
 
   <script src="../static/js/main.js"></script>
 

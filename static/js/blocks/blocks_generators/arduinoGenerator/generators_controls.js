@@ -24,7 +24,20 @@ arduinoGenerator.forBlock['controls_if_simple'] = function(block) {
 
   return `if (${condition}) {\n${branch}}\n`;
 };
+// If/Else (se/então/senão)
+arduinoGenerator.forBlock['controls_if_else'] = function(block) {
+  const condition = arduinoGenerator.valueToCode(block, 'CONDITION', arduinoGenerator.ORDER_NONE) || 'false';
+  
+  // Pega os blocos de dentro do "então"
+  let branchDo = arduinoGenerator.statementToCode(block, 'DO');
+  branchDo = arduinoGenerator.addLoopTrap(branchDo, block);
 
+  // Pega os blocos de dentro do "senão"
+  let branchElse = arduinoGenerator.statementToCode(block, 'ELSE');
+  branchElse = arduinoGenerator.addLoopTrap(branchElse, block);
+
+  return `if (${condition}) {\n${branchDo}} else {\n${branchElse}}\n`;
+};
 // While (enquanto)
 arduinoGenerator.forBlock['controls_while'] = function(block) {
   const condition = arduinoGenerator.valueToCode(block, 'CONDITION', arduinoGenerator.ORDER_NONE) || 'false';
