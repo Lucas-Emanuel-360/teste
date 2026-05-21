@@ -93,3 +93,61 @@ arduinoGenerator.forBlock['carrinho_finalizar'] = function(block) {
          `digitalWrite(car_Dir_Tras, HIGH);\n` +
          `while(true);\n`; // Loop infinito para travar o Arduino
 };
+
+// ==========================================================
+// GERADORES DE CÓDIGO - SHIELD CDR CAR
+// ==========================================================
+
+// Gerador Setup do CDR CAR
+arduinoGenerator.forBlock['carrinho_cdr_setup'] = function(block) {
+  // Pega os pinos inseridos (com os padrões do CDR CAR como fallback)
+  const pinoEV = arduinoGenerator.valueToCode(block, 'ESQ_VEL', arduinoGenerator.ORDER_ATOMIC) || '10';
+  const pinoED = arduinoGenerator.valueToCode(block, 'ESQ_DIR', arduinoGenerator.ORDER_ATOMIC) || '12';
+  const pinoDV = arduinoGenerator.valueToCode(block, 'DIR_VEL', arduinoGenerator.ORDER_ATOMIC) || '11';
+  const pinoDD = arduinoGenerator.valueToCode(block, 'DIR_DIR', arduinoGenerator.ORDER_ATOMIC) || '13';
+
+  // Variáveis Globais
+  arduinoGenerator.definitions_['var_cdr_esq_vel'] = `int cdr_Esq_Vel = ${pinoEV};`;
+  arduinoGenerator.definitions_['var_cdr_esq_dir'] = `int cdr_Esq_Dir = ${pinoED};`;
+  arduinoGenerator.definitions_['var_cdr_dir_vel'] = `int cdr_Dir_Vel = ${pinoDV};`;
+  arduinoGenerator.definitions_['var_cdr_dir_dir'] = `int cdr_Dir_Dir = ${pinoDD};`;
+  arduinoGenerator.definitions_['var_cdr_velocidade'] = `int cdr_velocidade = 130; // Velocidade ideal para OBR`;
+
+  // Define os pinos como OUTPUT no void setup()
+  arduinoGenerator.setups_['setup_cdr_esq_vel'] = `pinMode(cdr_Esq_Vel, OUTPUT);`;
+  arduinoGenerator.setups_['setup_cdr_esq_dir'] = `pinMode(cdr_Esq_Dir, OUTPUT);`;
+  arduinoGenerator.setups_['setup_cdr_dir_vel'] = `pinMode(cdr_Dir_Vel, OUTPUT);`;
+  arduinoGenerator.setups_['setup_cdr_dir_dir'] = `pinMode(cdr_Dir_Dir, OUTPUT);`;
+
+  return '';
+};
+
+// Gerador Frente CDR CAR
+arduinoGenerator.forBlock['carrinho_cdr_frente'] = function(block) {
+  return `digitalWrite(cdr_Esq_Dir, HIGH);\n` +
+         `digitalWrite(cdr_Dir_Dir, HIGH);\n` +
+         `analogWrite(cdr_Esq_Vel, cdr_velocidade);\n` +
+         `analogWrite(cdr_Dir_Vel, cdr_velocidade);\n`;
+};
+
+// Gerador Direita CDR CAR (Curva Pivô)
+arduinoGenerator.forBlock['carrinho_cdr_direita'] = function(block) {
+  return `digitalWrite(cdr_Esq_Dir, HIGH);\n` +
+         `digitalWrite(cdr_Dir_Dir, HIGH);\n` + 
+         `analogWrite(cdr_Esq_Vel, cdr_velocidade);\n` + 
+         `analogWrite(cdr_Dir_Vel, 0);\n`; // Desliga a roda direita para servir de pivô
+};
+
+// Gerador Esquerda CDR CAR (Curva Pivô)
+arduinoGenerator.forBlock['carrinho_cdr_esquerda'] = function(block) {
+  return `digitalWrite(cdr_Esq_Dir, HIGH);\n` +
+         `digitalWrite(cdr_Dir_Dir, HIGH);\n` + 
+         `analogWrite(cdr_Esq_Vel, 0);\n` + // Desliga a roda esquerda para servir de pivô
+         `analogWrite(cdr_Dir_Vel, cdr_velocidade);\n`;
+};
+
+// Gerador Parar CDR CAR
+arduinoGenerator.forBlock['carrinho_cdr_parar'] = function(block) {
+  return `analogWrite(cdr_Esq_Vel, 0);\n` +
+         `analogWrite(cdr_Dir_Vel, 0);\n`;
+};

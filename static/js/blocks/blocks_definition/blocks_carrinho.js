@@ -86,5 +86,64 @@ Blockly.defineBlocksWithJsonArray([
     "nextStatement": null,
     "colour": "#E67E22",
     "tooltip": "Para os motores e encerra o programa (Loop infinito)."
+  },
+  // ==========================================================
+  // BLOCOS ESPECÍFICOS: SHIELD CDR CAR (1 Pino Digital + 1 PWM)
+  // ==========================================================
+
+  // Bloco 1: SETUP (Configurar Pinos do CDR CAR)
+  {
+    "type": "carrinho_cdr_setup",
+    "message0": "🏎️ Configurar CDR CAR %1 Motor Esq. ➔ Vel(PWM) %2 Dir(Digital) %3 Motor Dir. ➔ Vel(PWM) %4 Dir(Digital) %5",
+    "args0": [
+      { "type": "input_dummy" },
+      { "type": "input_value", "name": "ESQ_VEL", "check": "Number" },
+      { "type": "input_value", "name": "ESQ_DIR", "check": "Number" },
+      { "type": "input_value", "name": "DIR_VEL", "check": "Number" },
+      { "type": "input_value", "name": "DIR_DIR", "check": "Number" }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D35400", // Cor um pouco mais escura para diferenciar
+    "tooltip": "Define as portas do Shield do CDR CAR. Use pinos PWM (~)."
+  },
+
+  // Bloco 2: Mover para Frente CDR CAR
+  {
+    "type": "carrinho_cdr_frente",
+    "message0": "⬆️ Mover CDR CAR para frente",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D35400",
+    "tooltip": "Faz o CDR CAR andar para frente."
+  },
+
+// Bloco 3: Virar para Direita CDR CAR (Curva Pivô)
+  {
+    "type": "carrinho_cdr_direita",
+    "message0": "➡️ Virar CDR CAR para direita",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D35400",
+    "tooltip": "Faz uma curva pivô para a direita, parando a roda direita e avançando a esquerda."
+  },
+
+  // Bloco 4: Virar para Esquerda CDR CAR (Curva Pivô)
+  {
+    "type": "carrinho_cdr_esquerda",
+    "message0": "⬅️ Virar CDR CAR para esquerda",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D35400",
+    "tooltip": "Faz uma curva pivô para a esquerda, parando a roda esquerda e avançando a direita."
+  },
+  // Bloco 5: Parar CDR CAR
+  {
+    "type": "carrinho_cdr_parar",
+    "message0": "🛑 Parar CDR CAR",
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D35400",
+    "tooltip": "Corta a energia (PWM = 0) dos motores do CDR CAR."
   }
 ]);
