@@ -87,14 +87,14 @@ body {
      3. HEADER E SIDEBAR
      ---------------------------------- */
 .top-bar {
-  height: 60px;
+  height: 75px; /* AUMENTE A ALTURA (pode por 75px, 80px, até não encostar mais) */
   background: var(--bg-header);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   padding: 0 25px;
   position: relative;
-  z-index: 100;
+  z-index: 1000; /* AUMENTE O Z-INDEX PARA 1000 (Garante que a barra nunca fique atrás dos blocos) */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -165,8 +165,8 @@ body {
 
 /* LOGO SVG FIXA */
 .logo {
-  height: 38px; /* Ajuste para encaixar perfeitamente na barra */
-  width: auto; /* Mantém a proporção correta da logo */
+  height: 48px;
+  width: auto;
   margin-right: 30px;
   cursor: pointer;
   object-fit: contain;
@@ -346,11 +346,107 @@ body.theme-light .modal-header {
 }
 
 /* ----------------------------------
+     NOVO: ESTILOS DA TELA DE SELEÇÃO
+     ---------------------------------- */
+.selector-screen {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: var(--bg-app);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.selector-content {
+  text-align: center;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.selector-logo {
+  height: 65px;
+  margin-bottom: 20px;
+}
+
+.selector-title {
+  color: var(--text-main);
+  font-size: 32px;
+  margin-bottom: 5px;
+}
+
+.selector-subtitle {
+  color: var(--text-muted);
+  font-size: 16px;
+  margin-bottom: 40px;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.board-card {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 30px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.board-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.board-image-container {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.board-image-container img {
+  max-height: 100%;
+  max-width: 100%;
+  width: 100%;  
+  height: 100%; 
+  object-fit: contain;
+}
+
+/* Zoom exclusivo para remover as bordas vazias da imagem da Caixinha */
+.caixinha-img {
+  transform: scale(1.6) translateY(12px); 
+}
+
+.board-card h3 {
+  color: var(--primary);
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.board-card p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ----------------------------------
      5. WORKSPACE E LIVE CODE PANEL
      ---------------------------------- */
 .main-layout {
   display: flex;
-  height: calc(100vh - 60px);
+  flex: 1;
   width: 100%;
   position: relative;
 }
@@ -793,7 +889,7 @@ body.theme-light .modal-header {
   }
   
   .logo {
-    height: 30px; /* Reduz altura no mobile para caber bem */
+    height: 30px;
     width: auto;
     margin-right: 0;
   }

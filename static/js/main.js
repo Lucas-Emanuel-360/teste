@@ -196,7 +196,7 @@ const themeConfigs = {
 };
 
 let monacoEditorInstance = null;
-let monacoLiveEditor = null; // Instância nova para o código em tempo real
+let monacoLiveEditor = null;
 
 function setTheme(themeName) {
   const config = themeConfigs[themeName] || themeConfigs.aura;
@@ -267,45 +267,14 @@ const workspace = Blockly.inject("blocklyArea", {
   trashcan: true,
 });
 
-const savedTheme = localStorage.getItem("roboblocks_theme") || "aura";
-setTheme(savedTheme);
+// Referência limpa do XML para carregar categorias com segurança
+const baseToolboxXML = document.getElementById("toolbox").outerHTML;
 
-setTimeout(() => {
-  Blockly.svgResize(workspace);
-}, 100);
-window.addEventListener("resize", () => Blockly.svgResize(workspace));
-
-// Traz os blocos padrões ao iniciar um novo projeto
+// Inicia com o bloco padrão
 const DEFAULT_XML = `<xml><block type="roboblocks_start" x="100" y="50" deletable="false"></block></xml>`;
 
-const autoSaveXml = localStorage.getItem("roboblocks_autosave");
-if (
-  autoSaveXml &&
-  autoSaveXml !==
-    '<xml xmlns="https://developers.google.com/blockly/xml"></xml>'
-) {
-  try {
-    Blockly.Xml.domToWorkspace(
-      Blockly.utils.xml.textToDom(autoSaveXml),
-      workspace,
-    );
-    setTimeout(() => showToast("💾 Projeto restaurado automaticamente!"), 1000);
-  } catch (e) {
-    console.error("Erro ao restaurar autosave", e);
-    Blockly.Xml.domToWorkspace(
-      Blockly.utils.xml.textToDom(DEFAULT_XML),
-      workspace,
-    );
-  }
-} else {
-  // Injeta bloco padrao
-  Blockly.Xml.domToWorkspace(
-    Blockly.utils.xml.textToDom(DEFAULT_XML),
-    workspace,
-  );
-}
+// O Auto-Save e inicialização do tema ocorrem no DOMContentLoaded abaixo.
 
-// Lógica do Empty State
 function checkEmptyState() {
   const emptyStateEl = document.getElementById("emptyState");
   if (workspace.getAllBlocks().length === 0) {
@@ -314,7 +283,107 @@ function checkEmptyState() {
     emptyStateEl.classList.remove("show");
   }
 }
-checkEmptyState();
+
+// =============================================================
+// NOVO: GERENCIAMENTO DE TELAS E TROCA DE HARDWARE
+// =============================================================
+
+function iniciarIDE(plataforma) {
+  // Salva preferência
+  localStorage.setItem("roboblocks_plataforma", plataforma);
+  
+  // Transição de tela
+  document.getElementById("selector-screen").style.display = "none";
+  document.getElementById("ide-screen").style.display = "flex";
+  
+  // Ajusta o dropdown de hardware
+  const boardSelect = document.getElementById("boardSelect");
+  if (plataforma === 'mega') {
+      boardSelect.value = 'mega';
+  } else {
+      boardSelect.value = 'uno'; // Caixinha usa Uno por baixo dos panos
+  }
+
+  // Atualiza Toolbox dinamicamente
+  atualizarToolbox(plataforma);
+  
+  // Força renderização do Blockly após tela ficar visível
+  setTimeout(() => {
+    Blockly.svgResize(workspace);
+    handleResponsiveLayout();
+  }, 100);
+}
+
+function atualizarToolbox(plataforma) {
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(baseToolboxXML, "text/xml");
+  
+  // Ocultar categorias que não pertencem ao Arduino Uno ou Mega
+  if (plataforma === "uno" || plataforma === "mega") {
+    const catProjetos = xmlDoc.getElementById("cat_projetos");
+    if (catProjetos) {
+      const catCaixinha = xmlDoc.getElementById("cat_caixinha");
+      if (catCaixinha) catCaixinha.remove();
+      // Se não restar nada em projetos, podemos remover a categoria inteira
+      if (catProjetos.children.length === 0) catProjetos.remove();
+    }
+  } 
+  // Ocultar categorias que não pertencem à Caixinha Educacional
+  else if (plataforma === "caixinha") {
+    const catCarrinho = xmlDoc.getElementById("cat_carrinho");
+    const catCdr = xmlDoc.getElementById("cat_cdr");
+    const catSensoresFaceis = xmlDoc.getElementById("cat_sensores_faceis");
+    
+    if (catCarrinho) catCarrinho.remove();
+    if (catCdr) catCdr.remove();
+    if (catSensoresFaceis) catSensoresFaceis.remove();
+  }
+
+  // Atualiza o Workspace com o novo XML filtrado
+  workspace.updateToolbox(xmlDoc.documentElement);
+}
+
+// Botão para voltar à seleção de Hardware
+document.getElementById("changePlatformBtn").addEventListener("click", () => {
+  document.getElementById("sideMenu").classList.remove("open");
+  document.getElementById("ide-screen").style.display = "none";
+  document.getElementById("selector-screen").style.display = "flex";
+});
+
+// Inicialização Central da Aplicação
+window.addEventListener("DOMContentLoaded", () => {
+  handleResponsiveLayout();
+
+  // Aplica o tema salvo
+  const savedTheme = localStorage.getItem("roboblocks_theme") || "aura";
+  setTheme(savedTheme);
+
+  // Verifica se o usuário já tem uma plataforma salva
+  const savedPlatform = localStorage.getItem("roboblocks_plataforma");
+  if (savedPlatform) {
+    iniciarIDE(savedPlatform);
+  } else {
+    // Se não, mostra a tela de seleção inicial
+    document.getElementById("ide-screen").style.display = "none";
+    document.getElementById("selector-screen").style.display = "flex";
+  }
+
+  // Restaura Autosave se houver
+  const autoSaveXml = localStorage.getItem("roboblocks_autosave");
+  if (autoSaveXml && autoSaveXml !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>') {
+    try {
+      Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(autoSaveXml), workspace);
+      setTimeout(() => showToast("💾 Projeto restaurado automaticamente!"), 1000);
+    } catch (e) {
+      console.error("Erro ao restaurar autosave", e);
+      Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(DEFAULT_XML), workspace);
+    }
+  } else {
+    Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(DEFAULT_XML), workspace);
+  }
+  
+  checkEmptyState();
+});
 
 // =============================================================
 // 3. MENU E HELPERS UI
@@ -395,7 +464,6 @@ workspace.addChangeListener((e) => {
   try {
     currentCode = arduinoGenerator.workspaceToCode(workspace);
 
-    // Atualiza o painel de código em tempo real
     if (monacoLiveEditor) {
       monacoLiveEditor.setValue(currentCode);
     }
@@ -458,7 +526,6 @@ require.config({
 let isManualEdit = false;
 let isSystemUpdate = false;
 
-// Lógica de Toggle do Live Code Panel
 document
   .getElementById("toggleLiveCodeBtn")
   .addEventListener("click", async () => {
@@ -547,7 +614,6 @@ function initMonaco() {
         },
       });
       
-      // Definição do Tema Coffee para o Editor Monaco
       monaco.editor.defineTheme('coffee-theme', {
           base: 'vs-dark', 
           inherit: true,
@@ -575,7 +641,6 @@ function initMonaco() {
       if (saved === "void") initialTheme = "void-theme";
       if (saved === "coffee") initialTheme = "coffee-theme";
 
-      // Instancia Monaco do Modal de Edição (Se precisar)
       const modalContainer = document.getElementById("monacoEditorContainer");
       if (modalContainer) {
         modalContainer.innerHTML = "";
@@ -597,7 +662,6 @@ function initMonaco() {
         });
       }
 
-      // Instancia Monaco da Live View Lateral
       const liveContainer = document.getElementById("monacoLiveContainer");
       if (liveContainer) {
         liveContainer.innerHTML = "";
@@ -607,7 +671,7 @@ function initMonaco() {
           theme: initialTheme,
           automaticLayout: true,
           readOnly: true,
-          minimap: { enabled: false }, // Live Code é apenas visualização
+          minimap: { enabled: false },
           fontFamily: "'Fira Code', 'Consolas', monospace",
           fontSize: 13,
           scrollBeyondLastLine: false,
@@ -766,7 +830,7 @@ document
             lineBuffer += value;
             if (lineBuffer.includes("\n")) {
               const lines = lineBuffer.split("\n");
-              lineBuffer = lines.pop(); // Guarda o fragmento final sem \n
+              lineBuffer = lines.pop(); 
               const time = new Date().toLocaleTimeString();
               lines.forEach(
                 (l) =>
@@ -1080,5 +1144,3 @@ function handleResponsiveLayout() {
   }
 }
 window.addEventListener("resize", handleResponsiveLayout);
-window.addEventListener("DOMContentLoaded", handleResponsiveLayout);
-handleResponsiveLayout();

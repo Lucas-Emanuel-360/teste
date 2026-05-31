@@ -30,122 +30,163 @@
 
 <body class="theme-aura">
 
-  <header class="top-bar">
-    <div class="logo-section">
-      <button id="menuBtn" class="hamburger-icon">☰</button>
-      <img src="../src/img/Logo.svg" alt="RoboBlocks IDE" class="logo">
-    </div>
+  <!-- 1. TELA DE SELEÇÃO DE PLATAFORMA -->
+  <div id="selector-screen" class="selector-screen">
+    <div class="selector-content">
+      <img src="../src/img/Logo.svg" alt="RoboBlocks Logo" class="selector-logo">
+      <h1 class="selector-title">Selecione sua Plataforma</h1>
+      <p class="selector-subtitle">Escolha o hardware que você vai programar agora.</p>
 
-    <div id="desktopControlsSlot" class="desktop-slot">
-      <div id="arduinoControlsBlock" class="arduino-controls">
-        <div id="agentStatus" title="Status da Conexão Local">
-          <span class="status-dot" id="agentDot"></span> Conector
+      <div class="board-grid">
+        <!-- Card Arduino Uno -->
+        <div class="board-card" onclick="iniciarIDE('uno')">
+          <div class="board-image-container">
+            <img src="../src/img/Uno.svg" alt="Arduino Uno">
+          </div>
+          <h3>Arduino Uno</h3>
+          <p>Plataforma padrão para circuitos, sensores avulsos e lógica pura.</p>
         </div>
 
-        <div class="toolbar-divider"></div>
+        <!-- Card Arduino Mega -->
+        <div class="board-card" onclick="iniciarIDE('mega')">
+          <div class="board-image-container">
+            <img src="../src/img/Mega.svg" alt="Arduino Mega 2560">
+          </div>
+          <h3>Arduino Mega</h3>
+          <p>Para projetos avançados. Mais portas, mais memória e suporte a componentes complexos.</p>
+        </div>
 
-        <select id="boardSelect" class="board-select">
-          <option value="uno">Arduino Uno</option>
-          <option value="nano">Arduino Nano</option>
-          <option value="mega">Arduino Mega 2560</option>
-        </select>
-
-        <select id="portInput" class="board-select">
-          <option value="">Porta COM</option>
-        </select>
-        <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
-
-        <div class="toolbar-divider"></div>
-
-        <button id="verifyBtn" class="secondary-btn" title="Verificar Código">✔️ Verificar</button>
-        <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
-
-        <div class="toolbar-divider"></div>
-
-        <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
-        <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
-        <button id="saveBtn" class="icon-btn" title="Salvar Projeto (.xml)">💾</button>
-        <button id="loadBtn" class="icon-btn" title="Abrir Projeto (.xml)">📂</button>
+        <!-- Card Caixinha Educacional -->
+        <div class="board-card" onclick="iniciarIDE('caixinha')">
+          <div class="board-image-container">
+            <img src="../src/img/Caixinha.png" alt="Caixinha Educacional" class="caixinha-img">
+          </div>
+          <h3>Caixinha Educacional</h3>
+          <p>Programe a caixinha interativa com todos os seus sensores embutidos.</p>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="spacer"></div>
+  <!-- 2. AMBIENTE IDE (Inicia oculto) -->
+  <div id="ide-screen" style="display: none; width: 100%; height: 100vh; flex-direction: column;">
 
-    <div id="desktopActionsSlot" class="desktop-slot">
-      <div id="actionsBlock" class="actions-section">
-        <button class="secondary-btn" id="connectSerialBtn" title="Monitor Serial">🔌 Monitor</button>
-        <button class="secondary-btn" id="toggleLiveCodeBtn" title="Código em Tempo Real">👁️ Live Code</button>
-        <button class="primary-btn" id="showCodeBtn">▶ Código</button>
+    <header class="top-bar">
+      <div class="logo-section">
+        <button id="menuBtn" class="hamburger-icon">☰</button>
+        <img src="../src/img/Logo.svg" alt="RoboBlocks IDE" class="logo">
       </div>
-    </div>
-  </header>
 
+      <div id="desktopControlsSlot" class="desktop-slot">
+        <div id="arduinoControlsBlock" class="arduino-controls">
+          <div id="agentStatus" title="Status da Conexão Local">
+            <span class="status-dot" id="agentDot"></span> Conector
+          </div>
+
+          <div class="toolbar-divider"></div>
+
+          <select id="boardSelect" class="board-select">
+            <option value="uno">Arduino Uno</option>
+            <option value="nano">Arduino Nano</option>
+            <option value="mega">Arduino Mega 2560</option>
+          </select>
+
+          <select id="portInput" class="board-select">
+            <option value="">Porta COM</option>
+          </select>
+          <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
+
+          <div class="toolbar-divider"></div>
+
+          <button id="verifyBtn" class="secondary-btn" title="Verificar Código">✔️ Verificar</button>
+          <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
+
+          <div class="toolbar-divider"></div>
+
+          <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
+          <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
+          <button id="saveBtn" class="icon-btn" title="Salvar Projeto (.xml)">💾</button>
+          <button id="loadBtn" class="icon-btn" title="Abrir Projeto (.xml)">📂</button>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div id="desktopActionsSlot" class="desktop-slot">
+        <div id="actionsBlock" class="actions-section">
+          <button class="secondary-btn" id="connectSerialBtn" title="Monitor Serial">🔌 Monitor</button>
+          <button class="secondary-btn" id="toggleLiveCodeBtn" title="Código em Tempo Real">👁️ Live Code</button>
+          <button class="primary-btn" id="showCodeBtn">▶ Código</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <main class="workspace-container" style="position: relative;">
+        <div id="emptyState" class="empty-state">
+          ✨ Arraste os blocos aqui para começar!
+        </div>
+        <div id="blocklyArea"></div>
+
+        <div id="serialMonitor">
+          <div class="serial-header">
+            <strong>📟 Monitor Serial</strong>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <select id="baudRateSelect" class="board-select"
+                style="padding: 4px; height: auto; min-width: 100px; font-size: 12px;">
+                <option value="9600">9600 baud</option>
+                <option value="19200">19200 baud</option>
+                <option value="38400">38400 baud</option>
+                <option value="115200">115200 baud</option>
+              </select>
+              <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="autoScrollCheck" checked> Scroll
+              </label>
+              <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                <input type="checkbox" id="timestampCheck"> Hora
+              </label>
+              <button id="clearSerialBtn" class="secondary-btn"
+                style="padding: 4px 10px; font-size: 12px; margin-left: 10px;">Limpar</button>
+              <button id="closeSerialBtn" class="icon-btn"
+                style="width: 30px; height: 30px; display: inline-flex; font-size: 14px; margin-left: 5px;">✕</button>
+            </div>
+          </div>
+          <div id="serialOutput"></div>
+          <div class="serial-input-container">
+            <input type="text" id="serialInputText" placeholder="Digite um comando para enviar ao Arduino..."
+              spellcheck="false">
+            <button id="sendSerialBtn" class="primary-btn">Enviar</button>
+          </div>
+        </div>
+      </main>
+
+      <aside id="liveCodePanel" class="live-code-panel">
+        <div class="panel-header">
+          <strong style="color: var(--primary);">💻 Código em Tempo Real</strong>
+          <button id="closeLiveCodeBtn" class="icon-btn" style="width: 30px; height: 30px;">✕</button>
+        </div>
+        <div id="monacoLiveContainer" class="live-editor-container"></div>
+      </aside>
+    </div>
+
+  </div> <!-- Fechamento da IDE Screen -->
+
+  <!-- MENU LATERAL -->
   <div id="sideMenu" class="side-menu">
     <div class="side-menu-header">
       <h3>Menu</h3>
       <button id="closeMenuBtn" class="icon-btn" style="font-size: 18px;">✕</button>
     </div>
-
     <div class="side-menu-body">
+      <button id="changePlatformBtn" class="menu-item" style="color: var(--accent);">🔄 Trocar Plataforma</button>
       <button id="openThemeModalBtn" class="menu-item">🎨 Mudar Tema</button>
       <button id="downloadAgentBtn" class="menu-item">⬇️ Baixar Conector (.exe)</button>
-
       <hr class="menu-divider">
-
       <div id="mobileMenuSlot"></div>
     </div>
   </div>
 
-  <div class="main-layout">
-    <main class="workspace-container" style="position: relative;">
-
-      <div id="emptyState" class="empty-state">
-        ✨ Arraste os blocos aqui para começar!
-      </div>
-
-      <div id="blocklyArea"></div>
-
-      <div id="serialMonitor">
-        <div class="serial-header">
-          <strong>📟 Monitor Serial</strong>
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <select id="baudRateSelect" class="board-select"
-              style="padding: 4px; height: auto; min-width: 100px; font-size: 12px;">
-              <option value="9600">9600 baud</option>
-              <option value="19200">19200 baud</option>
-              <option value="38400">38400 baud</option>
-              <option value="115200">115200 baud</option>
-            </select>
-            <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-              <input type="checkbox" id="autoScrollCheck" checked> Scroll
-            </label>
-            <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
-              <input type="checkbox" id="timestampCheck"> Hora
-            </label>
-            <button id="clearSerialBtn" class="secondary-btn"
-              style="padding: 4px 10px; font-size: 12px; margin-left: 10px;">Limpar</button>
-            <button id="closeSerialBtn" class="icon-btn"
-              style="width: 30px; height: 30px; display: inline-flex; font-size: 14px; margin-left: 5px;">✕</button>
-          </div>
-        </div>
-        <div id="serialOutput"></div>
-        <div class="serial-input-container">
-          <input type="text" id="serialInputText" placeholder="Digite um comando para enviar ao Arduino..."
-            spellcheck="false">
-          <button id="sendSerialBtn" class="primary-btn">Enviar</button>
-        </div>
-      </div>
-    </main>
-
-    <aside id="liveCodePanel" class="live-code-panel">
-      <div class="panel-header">
-        <strong style="color: var(--primary);">💻 Código em Tempo Real</strong>
-        <button id="closeLiveCodeBtn" class="icon-btn" style="width: 30px; height: 30px;">✕</button>
-      </div>
-      <div id="monacoLiveContainer" class="live-editor-container"></div>
-    </aside>
-  </div>
-
+  <!-- MODAIS -->
   <div id="errorModal" class="config-modal" style="display: none;">
     <div class="config-box" style="border-color: var(--danger);">
       <div class="config-header" style="border-bottom-color: var(--danger);">
@@ -198,7 +239,6 @@
       <div class="config-header">
         <h2>⚙️ Configuração do Sistema</h2>
       </div>
-
       <div class="config-body">
         <div class="config-row">
           <label>📂 Caminho do Arduino CLI:</label>
@@ -213,7 +253,6 @@
           <small>Porta onde o conector está rodando</small>
         </div>
       </div>
-
       <div class="modal-footer">
         <button id="closeConfigBtn" class="secondary-btn cancel-btn-tech">Cancelar</button>
         <button id="saveConfigBtn" class="primary-btn save-btn-tech">💾 Salvar Alterações</button>
@@ -223,22 +262,17 @@
 
   <div id="codeModal" class="modal" style="display: none;">
     <div class="modal-content" style="position: relative; height: 80vh; width: 800px;">
-
       <button id="closeModalBtn" class="close-modal-tech" title="Fechar"></button>
-
       <div class="modal-header">
         <h2 style="margin: 0; padding-right: 40px;">💻 Código C++</h2>
       </div>
-
       <div class="modal-body" style="padding: 0; overflow: hidden; flex: 1;">
         <div id="monacoEditorContainer" style="width: 100%; height: 100%;"></div>
       </div>
-
       <div class="modal-footer" style="justify-content: space-between;">
         <div>
-          <button id="resetCodeBtn" class="secondary-btn" title="Descartar alterações manuais">
-            🔄 Restaurar Blocos
-          </button>
+          <button id="resetCodeBtn" class="secondary-btn" title="Descartar alterações manuais">🔄 Restaurar
+            Blocos</button>
         </div>
         <div style="display: flex; gap: 10px;">
           <button id="downloadInoBtn" class="secondary-btn" title="Baixar arquivo .ino">⬇️ Baixar .ino</button>
@@ -248,8 +282,9 @@
     </div>
   </div>
 
+  <!-- TOOLBOX BASE (Será filtrada dinamicamente via JS) -->
   <xml id="toolbox" style="display: none">
-    <category name="Exemplos" colour="#F39C12">
+    <category id="cat_exemplos" name="Exemplos" colour="#F39C12">
       <button text="Piscar LED (Blink)" callbackKey="LOAD_BLINK"></button>
       <button text="Controlar Servo" callbackKey="LOAD_SERVO"></button>
       <button text="Ler Potenciômetro" callbackKey="LOAD_POT"></button>
@@ -257,7 +292,7 @@
 
     <sep></sep>
 
-    <category name="Lógica e Controle" colour="#D94848">
+    <category id="cat_logica" name="Lógica e Controle" colour="#D94848">
       <category name="Controle" colour="#D94848">
         <block type="controls_delay">
           <value name="DELAY_TIME">
@@ -365,7 +400,7 @@
       </category>
     </category>
 
-    <category name="Componentes" colour="#2980B9">
+    <category id="cat_componentes" name="Componentes" colour="#2980B9">
       <category name="Entrada (Sensores)" colour="#2980B9">
         <block type="io_digital_read">
           <value name="PIN">
@@ -504,7 +539,7 @@
       </category>
     </category>
 
-    <category name="Sensores Fáceis" colour="#16A085">
+    <category id="cat_sensores_faceis" name="Sensores Fáceis" colour="#16A085">
       <block type="sensor_luz_simples">
         <value name="PIN">
           <shadow type="math_number">
@@ -547,8 +582,8 @@
       </block>
     </category>
 
-    <category name="Projetos Especiais" colour="#D35400">
-      <category name="Carrinho" colour="#E67E22">
+    <category id="cat_projetos" name="Projetos Especiais" colour="#D35400">
+      <category id="cat_carrinho" name="Carrinho" colour="#E67E22">
         <block type="carrinho_setup">
           <value name="ESQ_FRENTE">
             <block type="math_number">
@@ -579,7 +614,7 @@
         <block type="carrinho_parar"></block>
         <block type="carrinho_finalizar"></block>
       </category>
-      <category name="Robô CDR CAR" colour="#D35400">
+      <category id="cat_cdr" name="Robô CDR CAR" colour="#D35400">
         <block type="carrinho_cdr_setup">
           <value name="ESQ_VEL">
             <shadow type="math_number">
@@ -607,7 +642,7 @@
         <block type="carrinho_cdr_esquerda"></block>
         <block type="carrinho_cdr_parar"></block>
       </category>
-      <category name="Caixinha" colour="#00C060">
+      <category id="cat_caixinha" name="Caixinha" colour="#00C060">
         <block type="caixinha_led_on"></block>
         <block type="caixinha_led_off"></block>
         <block type="caixinha_led_blink"></block>
@@ -622,8 +657,8 @@
 
     <sep></sep>
 
-    <category name="Variáveis" colour="#FF6680" custom="VARIABLE"></category>
-    <category name="Funções" colour="#995ba5" custom="PROCEDURE"></category>
+    <category id="cat_variaveis" name="Variáveis" colour="#FF6680" custom="VARIABLE"></category>
+    <category id="cat_funcoes" name="Funções" colour="#995ba5" custom="PROCEDURE"></category>
   </xml>
 
   <script src="../static/js/blocks/blocks_definition/blocks_controls.js"></script>
