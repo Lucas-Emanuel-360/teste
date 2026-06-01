@@ -30,33 +30,27 @@
 
 <body class="theme-aura">
 
-  <!-- 1. TELA DE SELEÇÃO DE PLATAFORMA -->
   <div id="selector-screen" class="selector-screen">
-    <div class="selector-content">
+    <div class="selector-content"> 
       <img src="../src/img/Logo.svg" alt="RoboBlocks Logo" class="selector-logo">
       <h1 class="selector-title">Selecione sua Plataforma</h1>
       <p class="selector-subtitle">Escolha o hardware que você vai programar agora.</p>
 
       <div class="board-grid">
-        <!-- Card Arduino Uno -->
         <div class="board-card" onclick="iniciarIDE('uno')">
-          <div class="board-image-container">
-            <img src="../src/img/Uno.svg" alt="Arduino Uno">
-          </div>
+          <div class="board-image-container dynamic-svg" id="board-uno"></div>
+          
           <h3>Arduino Uno</h3>
           <p>Plataforma padrão para circuitos, sensores avulsos e lógica pura.</p>
         </div>
 
-        <!-- Card Arduino Mega -->
         <div class="board-card" onclick="iniciarIDE('mega')">
-          <div class="board-image-container">
-            <img src="../src/img/Mega.svg" alt="Arduino Mega 2560">
-          </div>
+          <div class="board-image-container dynamic-svg" id="board-mega"></div>
+          
           <h3>Arduino Mega</h3>
           <p>Para projetos avançados. Mais portas, mais memória e suporte a componentes complexos.</p>
         </div>
 
-        <!-- Card Caixinha Educacional -->
         <div class="board-card" onclick="iniciarIDE('caixinha')">
           <div class="board-image-container">
             <img src="../src/img/Caixinha.png" alt="Caixinha Educacional" class="caixinha-img">
@@ -68,7 +62,6 @@
     </div>
   </div>
 
-  <!-- 2. AMBIENTE IDE (Inicia oculto) -->
   <div id="ide-screen" style="display: none; width: 100%; height: 100vh; flex-direction: column;">
 
     <header class="top-bar">
@@ -169,10 +162,7 @@
       </aside>
     </div>
 
-  </div> <!-- Fechamento da IDE Screen -->
-
-  <!-- MENU LATERAL -->
-  <div id="sideMenu" class="side-menu">
+  </div> <div id="sideMenu" class="side-menu">
     <div class="side-menu-header">
       <h3>Menu</h3>
       <button id="closeMenuBtn" class="icon-btn" style="font-size: 18px;">✕</button>
@@ -186,7 +176,6 @@
     </div>
   </div>
 
-  <!-- MODAIS -->
   <div id="errorModal" class="config-modal" style="display: none;">
     <div class="config-box" style="border-color: var(--danger);">
       <div class="config-header" style="border-bottom-color: var(--danger);">
@@ -282,7 +271,6 @@
     </div>
   </div>
 
-  <!-- TOOLBOX BASE (Será filtrada dinamicamente via JS) -->
   <xml id="toolbox" style="display: none">
     <category id="cat_exemplos" name="Exemplos" colour="#F39C12">
       <button text="Piscar LED (Blink)" callbackKey="LOAD_BLINK"></button>
@@ -685,6 +673,9 @@
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_caixinha.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_carrinho.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_sensores.js"></script>
+  
+  <script src="../static/js/virtualBoards.js"></script>
+  
   <script src="../static/js/main.js"></script>
 
 </body>

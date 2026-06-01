@@ -16,6 +16,9 @@
   --text-main: #edecee;
   --text-muted: #a39ea9;
   --border-color: #3b3a4d;
+  
+  /* Cor específica para a PCB das placas Arduino no Tema Aura */
+  --board-bg: #1e1e24;
 
   --font-stack: 'Segoe UI', 'Roboto', sans-serif;
   --font-code: 'Fira Code', 'Consolas', monospace;
@@ -34,6 +37,9 @@ body.theme-light {
   --text-main: #2d3436;
   --text-muted: #636e72;
   --border-color: #dcdce0;
+  
+  /* Arduino clássico para o tema claro */
+  --board-bg: #00878f; 
 }
 
 /* --- TEMA VOID (Estilo Petro/OLED) --- */
@@ -47,6 +53,9 @@ body.theme-void {
   --text-main: #ffffff;
   --text-muted: #888888;
   --border-color: #222222;
+
+  /* Placa ultra escura para combinar com o Void */
+  --board-bg: #422963; 
 }
 
 /* --- TEMA COFFEE (Tons de Café) --- */
@@ -62,6 +71,38 @@ body.theme-coffee {
   --text-main: #fcf4eb;
   --text-muted: #a68c81;
   --border-color: #54403a;
+
+  /* Placa em tom de café torrado */
+  --board-bg: #755952; 
+}
+
+/* ----------------------------------
+     ESTILOS DO SVG DINÂMICO
+     ---------------------------------- */
+.dynamic-svg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dynamic-svg svg {
+  max-height: 100%;
+  max-width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* O PULO DO GATO:
+  Encontra o corpo principal da placa que foi pintado com os escuros do Affinity
+  e substitui pela variável dinâmica CSS do tema!
+*/
+.dynamic-svg svg path[style*="fill:#1b1a23"],
+.dynamic-svg svg path[style*="fill:#1e1e24"] {
+  fill: var(--board-bg) !important;
+  transition: fill 0.5s ease;
 }
 
 /* ----------------------------------
@@ -87,14 +128,14 @@ body {
      3. HEADER E SIDEBAR
      ---------------------------------- */
 .top-bar {
-  height: 75px; /* AUMENTE A ALTURA (pode por 75px, 80px, até não encostar mais) */
+  height: 75px; 
   background: var(--bg-header);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   padding: 0 25px;
   position: relative;
-  z-index: 1000; /* AUMENTE O Z-INDEX PARA 1000 (Garante que a barra nunca fique atrás dos blocos) */
+  z-index: 1000; 
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
