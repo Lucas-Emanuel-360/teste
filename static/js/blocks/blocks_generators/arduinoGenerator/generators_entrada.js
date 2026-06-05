@@ -24,12 +24,10 @@ arduinoGenerator.forBlock['io_pulsein'] = function(block) {
   return [`pulseIn(${pin}, ${state}, ${timeout})`, arduinoGenerator.ORDER_ATOMIC];
 };
 
-// NOVO GERADOR: Ler Distância Ultrassônico
 arduinoGenerator.forBlock['io_ultrasonic_read'] = function(block) {
   const trig = arduinoGenerator.valueToCode(block, 'TRIG', arduinoGenerator.ORDER_ATOMIC) || '8';
   const echo = arduinoGenerator.valueToCode(block, 'ECHO', arduinoGenerator.ORDER_ATOMIC) || '9';
 
-  // Cria a função de leitura no escopo global do Arduino para deixar o loop principal limpo
   arduinoGenerator.definitions_['func_ultrasonic'] = 
     'long lerDistanciaUltrassonico(int trigPin, int echoPin) {\n' +
     '  pinMode(trigPin, OUTPUT);\n' +
@@ -39,9 +37,15 @@ arduinoGenerator.forBlock['io_ultrasonic_read'] = function(block) {
     '  digitalWrite(trigPin, HIGH);\n' +
     '  delayMicroseconds(10);\n' +
     '  digitalWrite(trigPin, LOW);\n' +
-    '  long duration = pulseIn(echoPin, HIGH, 20000);\n' + // Timeout de 20ms para não travar
+    '  long duration = pulseIn(echoPin, HIGH, 20000);\n' + 
     '  return duration / 58;\n' +
     '}\n';
 
   return [`lerDistanciaUltrassonico(${trig}, ${echo})`, arduinoGenerator.ORDER_ATOMIC];
+};
+
+// GERADOR DO NOVO BLOCO DINÂMICO DE COMPONENTES
+arduinoGenerator.forBlock['hardware_pino'] = function(block) {
+  const pinoEscolhido = block.getFieldValue('PINO');
+  return [pinoEscolhido, arduinoGenerator.ORDER_ATOMIC];
 };

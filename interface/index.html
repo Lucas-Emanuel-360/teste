@@ -31,7 +31,7 @@
 <body class="theme-aura">
 
   <div id="selector-screen" class="selector-screen">
-    <div class="selector-content"> 
+    <div class="selector-content">
       <img src="../src/img/Logo.svg" alt="RoboBlocks Logo" class="selector-logo">
       <h1 class="selector-title">Selecione sua Plataforma</h1>
       <p class="selector-subtitle">Escolha o hardware que você vai programar agora.</p>
@@ -39,14 +39,12 @@
       <div class="board-grid">
         <div class="board-card" onclick="iniciarIDE('uno')">
           <div class="board-image-container dynamic-svg" id="board-uno"></div>
-          
           <h3>Arduino Uno</h3>
           <p>Plataforma padrão para circuitos, sensores avulsos e lógica pura.</p>
         </div>
 
         <div class="board-card" onclick="iniciarIDE('mega')">
           <div class="board-image-container dynamic-svg" id="board-mega"></div>
-          
           <h3>Arduino Mega</h3>
           <p>Para projetos avançados. Mais portas, mais memória e suporte a componentes complexos.</p>
         </div>
@@ -75,27 +73,20 @@
           <div id="agentStatus" title="Status da Conexão Local">
             <span class="status-dot" id="agentDot"></span> Conector
           </div>
-
           <div class="toolbar-divider"></div>
-
           <select id="boardSelect" class="board-select">
             <option value="uno">Arduino Uno</option>
             <option value="nano">Arduino Nano</option>
             <option value="mega">Arduino Mega 2560</option>
           </select>
-
           <select id="portInput" class="board-select">
             <option value="">Porta COM</option>
           </select>
           <button id="refreshPortsBtn" class="icon-btn" title="Atualizar Portas">🔄</button>
-
           <div class="toolbar-divider"></div>
-
           <button id="verifyBtn" class="secondary-btn" title="Verificar Código">✔️ Verificar</button>
           <button id="uploadBtn" class="primary-btn">🚀 Enviar</button>
-
           <div class="toolbar-divider"></div>
-
           <button id="settingsBtn" class="icon-btn" title="Configurações">⚙️</button>
           <input type="file" id="loadInput" style="display: none;" accept=".xml,.rbb">
           <button id="saveBtn" class="icon-btn" title="Salvar Projeto (.xml)">💾</button>
@@ -107,6 +98,8 @@
 
       <div id="desktopActionsSlot" class="desktop-slot">
         <div id="actionsBlock" class="actions-section">
+          <button class="secondary-btn" id="toggleHardwareBtn" title="Montagem Física"
+            onclick="window.abrirMontagem()">🛠️ Montagem</button>
           <button class="secondary-btn" id="connectSerialBtn" title="Monitor Serial">🔌 Monitor</button>
           <button class="secondary-btn" id="toggleLiveCodeBtn" title="Código em Tempo Real">👁️ Live Code</button>
           <button class="primary-btn" id="showCodeBtn">▶ Código</button>
@@ -116,9 +109,7 @@
 
     <div class="main-layout">
       <main class="workspace-container" style="position: relative;">
-        <div id="emptyState" class="empty-state">
-          ✨ Arraste os blocos aqui para começar!
-        </div>
+        <div id="emptyState" class="empty-state">✨ Arraste os blocos aqui para começar!</div>
         <div id="blocklyArea"></div>
 
         <div id="serialMonitor">
@@ -161,8 +152,9 @@
         <div id="monacoLiveContainer" class="live-editor-container"></div>
       </aside>
     </div>
+  </div>
 
-  </div> <div id="sideMenu" class="side-menu">
+  <div id="sideMenu" class="side-menu">
     <div class="side-menu-header">
       <h3>Menu</h3>
       <button id="closeMenuBtn" class="icon-btn" style="font-size: 18px;">✕</button>
@@ -277,9 +269,7 @@
       <button text="Controlar Servo" callbackKey="LOAD_SERVO"></button>
       <button text="Ler Potenciômetro" callbackKey="LOAD_POT"></button>
     </category>
-
     <sep></sep>
-
     <category id="cat_logica" name="Lógica e Controle" colour="#D94848">
       <category name="Controle" colour="#D94848">
         <block type="controls_delay">
@@ -390,6 +380,7 @@
 
     <category id="cat_componentes" name="Componentes" colour="#2980B9">
       <category name="Entrada (Sensores)" colour="#2980B9">
+        <block type="hardware_pino"></block>
         <block type="io_digital_read">
           <value name="PIN">
             <shadow type="math_number">
@@ -642,12 +633,48 @@
         <block type="caixinha_buzzer_sirene"></block>
       </category>
     </category>
-
     <sep></sep>
-
     <category id="cat_variaveis" name="Variáveis" colour="#FF6680" custom="VARIABLE"></category>
     <category id="cat_funcoes" name="Funções" colour="#995ba5" custom="PROCEDURE"></category>
   </xml>
+
+  <div id="hardwareOverlay" class="hardware-overlay" style="display: none;">
+
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 200; display: flex; gap: 10px;">
+      <button id="btnStartSimulacao" class="primary-btn"
+        style="background: var(--secondary); color: #15141b; font-weight: bold;" onclick="window.toggleSimulacao()">▶
+        Iniciar Simulação</button>
+      <button id="closeHardwareBtn" class="close-hardware-btn" title="Voltar para os Blocos" style="position: static;"
+        onclick="window.fecharMontagem()">✕ Fechar Montagem</button>
+    </div>
+
+    <div class="zoom-controls">
+      <button id="zoomInBtn" class="tool-btn" title="Aproximar Zoom" onclick="window.alterarZoomManual(1.2)">➕</button>
+      <button id="zoomResetBtn" class="tool-btn" title="Centralizar" onclick="window.resetarZoom()">🏠</button>
+      <button id="zoomOutBtn" class="tool-btn" title="Afastar Zoom" onclick="window.alterarZoomManual(0.8)">➖</button>
+    </div>
+
+    <div class="hardware-workspace" id="hardwareWorkspace">
+      <div id="assemblyCanvas" class="assembly-canvas"
+        style="transform-origin: 0 0; transform: scale(1) translate(0px, 0px);">
+        <svg id="wire-canvas"></svg>
+        <div class="board-area dynamic-svg" id="assemblyBoardArea"></div>
+      </div>
+
+      <div class="floating-toolbox">
+        <span style="color: var(--text-muted); font-size: 12px; margin-right: 10px; font-weight: bold;">➕
+          ADICIONAR:</span>
+        <button onclick="window.adicionarComponente('LED')" class="tool-btn">💡 LED</button>
+        <button onclick="window.adicionarComponente('BOTAO')" class="tool-btn">🔘 Botão</button>
+        <button onclick="window.adicionarComponente('POTENCIOMETRO')" class="tool-btn">🎛️ Potenciômetro</button>
+        <button onclick="window.adicionarComponente('LDR')" class="tool-btn">☀️ LDR</button>
+        <button onclick="window.adicionarComponente('ULTRASSOM')" class="tool-btn">📏 Ultrassom</button>
+        <button onclick="window.adicionarComponente('SERVO')" class="tool-btn">⚙️ Servo</button>
+        <button onclick="window.adicionarComponente('PONTE_H')" class="tool-btn"
+          style="border-color: var(--accent); color: var(--accent);">🏎️ Ponte H</button>
+      </div>
+    </div>
+  </div>
 
   <script src="../static/js/blocks/blocks_definition/blocks_controls.js"></script>
   <script src="../static/js/blocks/blocks_definition/blocks_entrada.js"></script>
@@ -673,10 +700,10 @@
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_caixinha.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_carrinho.js"></script>
   <script src="../static/js/blocks/blocks_generators/arduinoGenerator/generators_sensores.js"></script>
-  
+
   <script src="../static/js/virtualBoards.js"></script>
-  
   <script src="../static/js/main.js"></script>
+  <script src="../static/js/hardware_assembly.js"></script>
 
 </body>
 

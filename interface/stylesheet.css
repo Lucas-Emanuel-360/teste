@@ -16,8 +16,7 @@
   --text-main: #edecee;
   --text-muted: #a39ea9;
   --border-color: #3b3a4d;
-  
-  /* Cor específica para a PCB das placas Arduino no Tema Aura */
+
   --board-bg: #1e1e24;
 
   --font-stack: 'Segoe UI', 'Roboto', sans-serif;
@@ -26,7 +25,6 @@
   --shadow-soft: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-/* --- TEMA LIGHT (Branco) --- */
 body.theme-light {
   --bg-app: #f2f2f5;
   --bg-panel: #ffffff;
@@ -37,12 +35,9 @@ body.theme-light {
   --text-main: #2d3436;
   --text-muted: #636e72;
   --border-color: #dcdce0;
-  
-  /* Arduino clássico para o tema claro */
-  --board-bg: #00878f; 
+  --board-bg: #00878f;
 }
 
-/* --- TEMA VOID (Estilo Petro/OLED) --- */
 body.theme-void {
   --bg-app: #000000;
   --bg-panel: #050505;
@@ -53,12 +48,9 @@ body.theme-void {
   --text-main: #ffffff;
   --text-muted: #888888;
   --border-color: #222222;
-
-  /* Placa ultra escura para combinar com o Void */
-  --board-bg: #422963; 
+  --board-bg: #422963;
 }
 
-/* --- TEMA COFFEE (Tons de Café) --- */
 body.theme-coffee {
   --bg-app: #2b211e;
   --bg-panel: #3a2c28;
@@ -71,14 +63,10 @@ body.theme-coffee {
   --text-main: #fcf4eb;
   --text-muted: #a68c81;
   --border-color: #54403a;
-
-  /* Placa em tom de café torrado */
-  --board-bg: #755952; 
+  --board-bg: #755952;
 }
 
-/* ----------------------------------
-     ESTILOS DO SVG DINÂMICO
-     ---------------------------------- */
+/* ESTILOS DO SVG DINÂMICO */
 .dynamic-svg {
   width: 100%;
   height: 100%;
@@ -95,19 +83,13 @@ body.theme-coffee {
   object-fit: contain;
 }
 
-/* O PULO DO GATO:
-  Encontra o corpo principal da placa que foi pintado com os escuros do Affinity
-  e substitui pela variável dinâmica CSS do tema!
-*/
 .dynamic-svg svg path[style*="fill:#1b1a23"],
 .dynamic-svg svg path[style*="fill:#1e1e24"] {
   fill: var(--board-bg) !important;
   transition: fill 0.5s ease;
 }
 
-/* ----------------------------------
-     2. RESET E BASE
-     ---------------------------------- */
+/* 2. RESET E BASE */
 * {
   margin: 0;
   padding: 0;
@@ -124,18 +106,16 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* ----------------------------------
-     3. HEADER E SIDEBAR
-     ---------------------------------- */
+/* 3. HEADER E SIDEBAR */
 .top-bar {
-  height: 75px; 
+  height: 75px;
   background: var(--bg-header);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   padding: 0 25px;
   position: relative;
-  z-index: 1000; 
+  z-index: 1000;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -204,7 +184,6 @@ body {
   color: var(--primary);
 }
 
-/* LOGO SVG FIXA */
 .logo {
   height: 48px;
   width: auto;
@@ -242,9 +221,7 @@ select:focus {
   box-shadow: 0 0 0 2px rgba(162, 119, 255, 0.2);
 }
 
-/* ----------------------------------
-     4. BOTÕES E COMPORTAMENTOS
-     ---------------------------------- */
+/* 4. BOTÕES E COMPORTAMENTOS */
 button {
   cursor: pointer;
   border: none;
@@ -327,7 +304,6 @@ body.theme-light .secondary-btn:hover {
 }
 
 #closeMenuBtn:hover {
-  transition: 0.4s;
   background: rgba(124, 33, 33, 0.274);
   color: var(--danger);
   border-color: #570404;
@@ -349,7 +325,6 @@ body.theme-light .secondary-btn:hover {
 }
 
 .icon-btn:hover {
-  transition: 0.4s;
   background: rgba(255, 255, 255, 0.075);
   border-color: var(--border-color);
 }
@@ -357,10 +332,6 @@ body.theme-light .secondary-btn:hover {
 body.theme-light .icon-btn:hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: #9c9c9c;
-}
-
-body.theme-light .modal-header {
-  color: #000000;
 }
 
 .status-dot {
@@ -386,12 +357,13 @@ body.theme-light .modal-header {
   margin-right: 5px;
 }
 
-/* ----------------------------------
-     NOVO: ESTILOS DA TELA DE SELEÇÃO
-     ---------------------------------- */
+/* TELA DE SELEÇÃO */
 .selector-screen {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: var(--bg-app);
   z-index: 5000;
   display: flex;
@@ -446,7 +418,7 @@ body.theme-light .modal-header {
 .board-card:hover {
   border-color: var(--primary);
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .board-image-container {
@@ -460,14 +432,13 @@ body.theme-light .modal-header {
 .board-image-container img {
   max-height: 100%;
   max-width: 100%;
-  width: 100%;  
-  height: 100%; 
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-/* Zoom exclusivo para remover as bordas vazias da imagem da Caixinha */
 .caixinha-img {
-  transform: scale(1.6) translateY(12px); 
+  transform: scale(1.6) translateY(12px);
 }
 
 .board-card h3 {
@@ -482,9 +453,7 @@ body.theme-light .modal-header {
   line-height: 1.5;
 }
 
-/* ----------------------------------
-     5. WORKSPACE E LIVE CODE PANEL
-     ---------------------------------- */
+/* 5. WORKSPACE E LIVE CODE PANEL */
 .main-layout {
   display: flex;
   flex: 1;
@@ -507,7 +476,6 @@ body.theme-light .modal-header {
 .blocklyToolboxDiv {
   background-color: var(--bg-panel) !important;
   border-right: 1px solid var(--border-color) !important;
-  transition: background-color 0.3s ease;
 }
 
 .blocklyFlyoutBackground {
@@ -570,9 +538,7 @@ body.theme-light .modal-header {
   align-items: center;
 }
 
-/* ----------------------------------
-     6. MODAIS E CONFIG
-     ---------------------------------- */
+/* 6. MODAIS E CONFIG */
 .config-modal,
 .modal {
   position: fixed;
@@ -755,9 +721,7 @@ body.theme-light .modal-header {
   transform: rotate(90deg);
 }
 
-/* ----------------------------------
-     7. EXTRAS & MONITOR SERIAL
-     ---------------------------------- */
+/* 7. EXTRAS & MONITOR SERIAL */
 #serialMonitor {
   position: absolute;
   bottom: 0;
@@ -789,34 +753,12 @@ body.theme-light .modal-header {
   gap: 10px;
 }
 
-.serial-header select,
-.serial-header button {
-  margin: 0;
-}
-
 #serialOutput {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
   font-size: 13px;
   line-height: 1.5;
-}
-
-#serialOutput::-webkit-scrollbar {
-  width: 8px;
-}
-
-#serialOutput::-webkit-scrollbar-track {
-  background: var(--bg-app);
-}
-
-#serialOutput::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-#serialOutput::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
 }
 
 .serial-input-container {
@@ -835,46 +777,6 @@ body.theme-light .modal-header {
   border-radius: var(--radius);
   padding: 8px 15px;
   font-family: var(--font-code);
-}
-
-.serial-input-container button {
-  padding: 8px 25px;
-}
-
-.toast {
-  position: fixed;
-  bottom: 30px;
-  right: -300px;
-  background: var(--bg-panel);
-  color: var(--text-main);
-  padding: 14px 24px;
-  border-radius: 8px;
-  border-left: 4px solid var(--secondary);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  z-index: 3000;
-  transition: right 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  font-size: 14px;
-}
-
-.toast.show {
-  right: 30px;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.loading-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(128, 128, 128, 0.2);
-  border-top-color: var(--text-main);
-  border-radius: 50%;
-  display: inline-block;
-  animation: spin 0.8s linear infinite;
-  margin-right: 5px;
 }
 
 #portInput {
@@ -896,25 +798,305 @@ body.theme-light .modal-header {
   transition: all 0.2s ease;
 }
 
-#portInput:hover {
-  border-color: var(--secondary);
-  box-shadow: 0 0 10px rgba(97, 255, 202, 0.1);
+/* =========================================
+   8. MONTAGEM DE HARDWARE VIRTUAL (FREE CANVAS)
+   ========================================= */
+.hardware-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, var(--bg-panel), var(--bg-app));
+  z-index: 9999;
+  display: flex;
 }
 
-#portInput:focus {
-  outline: none;
+.close-hardware-btn {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(255, 103, 103, 0.3);
+}
+
+.hardware-workspace {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.assembly-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* REMOVIDO will-change: transform; PARA NÃO PERDER QUALIDADE NO ZOOM */
+}
+
+.zoom-controls {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 200;
+}
+
+.zoom-controls button {
+  font-size: 18px;
+  width: 45px;
+  height: 45px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-controls button:hover {
+  background: var(--primary);
+  color: white;
+}
+
+#wire-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.wire-path {
+  fill: none;
+  stroke-width: 2.5px;
+  /* Fio mais fino */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Suaviza as quinas de 90 graus */
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.board-area {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 500px;
+  display: flex;
+  justify-content: center;
+  z-index: 1;
+}
+
+.board-area svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.5));
+}
+
+.pin-active {
+  fill: var(--secondary) !important;
+  stroke: var(--secondary) !important;
+  filter: drop-shadow(0 0 6px var(--secondary));
+  transition: 0.3s ease;
+}
+
+/* CAIXA DE FERRAMENTAS FLUTUANTE */
+.floating-toolbox {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(33, 32, 46, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  padding: 10px 20px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 200;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.tool-btn {
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tool-btn:hover {
+  background: var(--primary);
   border-color: var(--primary);
 }
 
-#portInput option {
-  background-color: var(--bg-panel);
+/* CARDS ARRASTÁVEIS */
+.component-card {
+  position: absolute;
+  background: rgba(43, 42, 59, 0.95);
+  backdrop-filter: blur(5px);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  width: 220px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  cursor: grab;
+}
+
+.component-card:active {
+  cursor: grabbing;
+}
+
+.card-drag-handle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 5px;
+}
+
+.card-icon {
+  font-size: 16px;
+}
+
+.card-name-input {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 14px;
+  width: 130px;
+  outline: none;
+  font-family: var(--font-stack);
+}
+
+.card-name-input::placeholder {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.card-name-input:focus {
+  border-bottom: 1px solid var(--secondary);
+}
+
+.port-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  background: var(--bg-panel);
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.port-selector label {
+  font-size: 11px;
   color: var(--text-main);
-  padding: 10px;
+  pointer-events: none;
+}
+
+.port-selector select {
+  padding: 2px 4px;
+  font-family: var(--font-code);
+  font-size: 11px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--secondary);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.color-select {
+  padding: 2px 4px;
+  font-family: var(--font-code);
+  font-size: 11px;
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.connection-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-color);
+  border-radius: 50%;
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.connection-dot.connected {
+  background: var(--secondary);
+  border-color: var(--secondary);
+  box-shadow: 0 0 8px var(--secondary);
 }
 
 /* =========================================
-     📱 RESPONSIVIDADE (MOBILE & TABLET)
-     ========================================= */
+   ESTADOS DE SIMULAÇÃO (MÁGICA DOS SVGS)
+   ========================================= */
+
+.edit-view {
+  display: block;
+}
+
+.sim-view {
+  display: none;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.sim-view img,
+.sim-view svg {
+  max-width: 90px;
+  max-height: 90px;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+  overflow: visible;
+}
+
+.hardware-workspace.simulating .component-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hardware-workspace.simulating .edit-view {
+  display: none !important;
+}
+
+.hardware-workspace.simulating .sim-view {
+  display: flex !important;
+}
+
+.hardware-workspace.simulating .floating-toolbox {
+  opacity: 0.2;
+  pointer-events: none;
+  transition: 0.3s;
+}
+
 @media (max-width: 768px) {
   .top-bar {
     height: auto;
@@ -928,57 +1110,12 @@ body.theme-light .modal-header {
     justify-content: space-between;
     margin-bottom: 10px;
   }
-  
-  .logo {
-    height: 30px;
-    width: auto;
-    margin-right: 0;
-  }
 
   .arduino-controls {
     width: 100%;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px;
-  }
-
-  .arduino-controls button {
-    flex: 1;
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  .toolbar-divider {
-    display: none;
-  }
-
-  #agentStatus {
-    display: none;
-  }
-
-  .side-menu {
-    width: 80%;
-    max-width: 300px;
-  }
-
-  .config-box,
-  .modal-content {
-    width: 95% !important;
-    height: auto !important;
-    max-height: 90vh;
-  }
-
-  .theme-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    height: 90vh !important;
-  }
-
-  .board-select {
-    width: 100%;
-    max-width: none;
   }
 
   .live-code-panel.open {
@@ -990,27 +1127,17 @@ body.theme-light .modal-header {
     z-index: 1000;
     border-left: none;
   }
-}
 
-.menu-divider {
-  border: 0;
-  border-top: 1px solid var(--border-color);
-  margin: 15px 0;
-  display: none;
+  .floating-toolbox {
+    width: 90%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 850px) {
-  .top-bar {
-    padding: 0 15px;
-    justify-content: space-between;
-  }
-
   .desktop-slot {
     display: none;
-  }
-
-  .menu-divider {
-    display: block;
   }
 
   #mobileMenuSlot .arduino-controls,
@@ -1027,30 +1154,5 @@ body.theme-light .modal-header {
   #mobileMenuSlot input {
     width: 100%;
     height: 45px;
-    margin: 0;
-    justify-content: center;
-  }
-
-  #mobileMenuSlot .arduino-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  #mobileMenuSlot #boardSelect,
-  #mobileMenuSlot #portInput,
-  #mobileMenuSlot #verifyBtn,
-  #mobileMenuSlot #uploadBtn {
-    grid-column: span 2;
-  }
-
-  #agentStatus {
-    justify-content: center;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: var(--radius);
-    grid-column: span 2;
-    display: flex;
   }
 }
