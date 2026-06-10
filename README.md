@@ -1,178 +1,207 @@
-# RoboBlocks — Documentação Técnica
+<div align="center">
 
-> **Versão do documento:** rascunho v1.0  
-> **Status do projeto:** Em desenvolvimento ativo  
-> **Última atualização:** Junho 2026
+<img src="src/img/Logo.svg" alt="RoboBlocks Logo" width="100">
+
+# RoboBlocks IDE
+
+**IDE de programação em blocos para Arduino — direto do navegador.**  
+Feito para estudantes e iniciantes. Sem instalar nada. Sem precisar saber C++.
+
+<br>
+
+![Status](https://img.shields.io/badge/status-em_desenvolvimento-a277ff?style=for-the-badge&labelColor=15141b)
+![Versão](https://img.shields.io/badge/versão-2.0.0-ffca85?style=for-the-badge&labelColor=15141b)
+![Licença](https://img.shields.io/badge/licença-MIT-61ffca?style=for-the-badge&labelColor=15141b)
+![IFNMG](https://img.shields.io/badge/IFNMG-Montes_Claros-ff6767?style=for-the-badge&labelColor=15141b)
+
+</div>
 
 ---
 
-# Visão Geral do Projeto
+## 🧩 O que é isso?
 
-O **RoboBlocks** é uma IDE baseada em blocos visuais para programação de placas Arduino, rodando inteiramente no navegador. O objetivo é tornar a programação de robótica acessível a iniciantes e estudantes — especialmente no contexto do **IFNMG** — sem exigir conhecimento de sintaxe C++.
+O **RoboBlocks** é uma IDE visual baseada em blocos (tipo Scratch, mas pra Arduino) que roda no navegador. A ideia é simples: o usuário arrasta e encaixa blocos de lógica, e o sistema gera o código C++ correspondente em tempo real — sem o usuário precisar ver uma linha de código se não quiser.
 
-O usuário monta a lógica arrastando e encaixando blocos visuais (via Google Blockly). A IDE traduz esse diagrama em código C++ válido para Arduino em tempo real. Para compilar e enviar o código para a placa física via USB, a IDE se comunica com um **agente local** (processo Node.js separado) que usa o `arduino-cli` internamente.
-
-### Tecnologias principais
-
-| Camada | Tecnologia |
-|---|---|
-| Interface visual (IDE) | HTML + CSS + JavaScript (vanilla) |
-| Motor de blocos | Google Blockly |
-| Editor de código | Monaco Editor (mesmo motor do VS Code) |
-| Geração de código | Gerador customizado Arduino (extensão do Blockly) |
-| Agente local (bridge USB) | Node.js + Express |
-| Compilador/Upload | arduino-cli (binário embutido) |
-| Monitor Serial | Web Serial API (Chrome/Edge) |
-
-### Arquitetura resumida
+Para enviar o código para a placa física via USB, a IDE se conecta a um pequeno servidor local (o **Conector**) que roda na máquina do usuário e usa o `arduino-cli` por baixo dos panos.
 
 ```
 Navegador (IDE)
 │
-├── Blockly Workspace  →  arduinoGenerator  →  Código C++ (Monaco)
+├── Blockly Workspace ──► arduinoGenerator ──► Código C++ (Monaco)
 │
-└── fetch() HTTP  ──►  Agente Local (agent.js : porta 3000)
-                              │
-                        arduino-cli.exe
-                              │
-                         Arduino (USB)
+└── fetch() ──► Conector (agent.js : porta 3000)
+                      │
+                arduino-cli.exe
+                      │
+               Arduino via USB
 ```
-
-A IDE roda como HTML estático (`interface/index.html`). O agente é um processo separado que precisa estar rodando na máquina do usuário para que compile e faça upload funcione.
 
 ---
 
-# Funcionalidades Principais
+## ⚡ Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Interface | HTML + CSS + JavaScript (vanilla) |
+| Motor de blocos | Google Blockly |
+| Editor de código | Monaco Editor (mesmo motor do VS Code) |
+| Geração de código | Gerador Arduino customizado (extensão Blockly) |
+| Conector local | Node.js + Express |
+| Compilador / Upload | `arduino-cli` (binário embutido) |
+| Monitor Serial | Web Serial API (Chrome / Edge) |
+
+---
+
+## 🚀 Funcionalidades
 
 ### Seleção de plataforma
 
-Na tela inicial, o usuário escolhe uma das três plataformas antes de entrar na IDE:
+Na tela inicial o usuário escolhe o hardware antes de entrar na IDE:
 
-- **Arduino Uno** — uso geral, sensores avulsos, lógica básica.
-- **Arduino Mega** — projetos mais complexos com mais pinos digitais e analógicos.
-- **Caixinha Educacional** — kit montado do IFNMG com mapeamento de pinos fixo (LEDs, botões, buzzer já pré-configurados). Usa Arduino Mega internamente.
-
-A escolha da plataforma define quais categorias de blocos aparecem na Toolbox e qual placa é usada pelo gerador de código.
-
-### Editor de blocos (Blockly Workspace)
-
-- Workspace com scroll, zoom e snap automático entre blocos.
-- **Bloco "Iniciar"** fixo e não deletável — funciona como ponto de entrada, com dois slots: `Configuração (Setup)` e `Repetir para Sempre (Loop)`, espelhando a estrutura de um sketch Arduino.
-- Criação de variáveis via botão `[+]` embutido no bloco Iniciar.
-- Suporte a funções (procedures) com e sem retorno, incluindo passagem de parâmetros.
-- Estado vazio com mensagem orientativa ("Arraste os blocos aqui para começar").
-
-### Categorias de blocos disponíveis
-
-| Categoria | Conteúdo |
+| Plataforma | Descrição |
 |---|---|
-| **Lógica** | Condicionais if/else, operadores booleanos |
-| **Matemática** | Operações aritméticas, funções numéricas |
-| **Texto** | Concatenação, conversão de tipos |
-| **Variáveis** | Criar, ler e atribuir variáveis |
-| **Controles** | Loops (repetir N vezes, enquanto), delay |
-| **Entrada** | Leitura digital e analógica, Serial print/read |
-| **Saída** | Escrita digital, PWM, Serial print |
-| **Sensores** | LDR (luz), sensor de linha (TCRT5000), sensor de distância (ultrassônico) |
-| **Servo** | Controle de ângulo de servomotor |
-| **Caixinha** | LEDs (esq/dir/cor), botões, buzzer — com mapeamento de pinos automático |
-| **Carrinho** | Setup de Ponte H, mover frente/trás/esquerda/direita, parar |
-| **Funções** | Definir e chamar funções customizadas |
+| 🔵 **Arduino Uno** | Uso geral — sensores avulsos, lógica, circuitos |
+| 🟣 **Arduino Mega** | Projetos maiores, mais pinos digitais e analógicos |
+| 🟠 **Caixinha Educacional** | Kit do IFNMG com LEDs, botões e buzzer pré-mapeados |
 
-### Geração de código em tempo real (Live Code)
-
-- Painel lateral abre com o botão **"👁️ Live Code"**.
-- Exibe o código C++ gerado pelos blocos em tempo real conforme o usuário edita.
-- Editor Monaco com syntax highlighting de C++.
-- **Modo de edição manual:** o usuário pode digitar no editor e desacoplar da geração automática temporariamente.
-- Botão **"▶ Código"** abre uma modal com o código final completo para cópia.
-- Botão **"⬇ .ino"** para download direto do arquivo `.ino`.
-
-### Temas visuais
-
-Quatro temas disponíveis, aplicados simultaneamente à UI, ao workspace do Blockly e ao Monaco Editor:
-
-- **Aura** (padrão) — dark, roxo/neon.
-- **Light** — claro, estilo GitHub.
-- **Void** — preto absoluto, alto contraste.
-- **Coffee** — dark quente, tons terrosos.
-
-Preferência salva em `localStorage`.
-
-### Compilação e upload (via Agente Local)
-
-Requer o **RoboBlocks Connector** (`agent.js`) rodando localmente:
-
-- Botão **"✔️ Verificar"** — compila o código sem fazer upload, reportando erros de sintaxe.
-- Botão **"🚀 Enviar"** — compila e envia para a placa na porta COM selecionada.
-- Seletor de porta COM com detecção automática via Web Serial API e opção de modo simulação (`COM_TESTE`) para testar sem hardware.
-- Indicador de status do conector (ponto colorido na barra superior: verde = online, cinza = offline).
-- Erros de compilação são exibidos em uma modal com o log completo do arduino-cli, e linhas com erro são destacadas no Monaco.
-
-### Monitor Serial Web
-
-- Ativado pelo botão **"🔌 Monitor"**.
-- Abre um painel sobreposto ao workspace com terminal de entrada/saída.
-- Usa a **Web Serial API** do navegador (requer Chrome ou Edge).
-- Funcionalidades: seleção de baud rate, auto-scroll, timestamp por mensagem, botão de limpar, envio de comandos para a placa via input de texto (Enter ou botão "Enviar").
-
-### Painel de Montagem de Hardware
-
-- Ativado pelo botão **"⚙️ Montagem"** (ícone de chip).
-- Exibe a imagem vetorial da placa selecionada (Uno ou Mega, renderizada via SVG injetado).
-- Permite adicionar componentes (ex: LED) e conectar seus pinos a pinos da placa via interface drag-and-drop com fios roteados.
-- Suporte a zoom (scroll ou botões +/−) e pan (arrastar o fundo).
-- Estado da montagem é salvo e restaurado automaticamente.
-
-### Persistência local
-
-- **Autosave:** o workspace é salvo automaticamente em `localStorage` a cada alteração.
-- **Salvar/Abrir projeto:** exporta e importa o estado do workspace em formato XML (`.xml` / `.rbb`).
-- Plataforma selecionada e tema são restaurados ao reabrir a página.
+A plataforma escolhida define quais categorias de blocos aparecem na Toolbox e qual placa o gerador usa.
 
 ---
 
-# Guia de Uso Técnico / Como Mexe
+### 🧱 Editor de Blocos
 
-### Pré-requisitos para uso completo
+- Workspace com scroll, zoom e snap automático.
+- **Bloco "Iniciar"** fixo e não deletável — ponto de entrada com slots `Setup` e `Loop`, espelhando a estrutura de um sketch Arduino.
+- Criação de variáveis via botão `[+]` embutido no bloco Iniciar.
+- Suporte a funções com e sem retorno, incluindo passagem de parâmetros.
 
-1. **Navegador:** Chrome ou Edge (necessário para Web Serial API e compilação).
-2. **RoboBlocks Connector:** baixar e executar o `agent.js` (ou o `.exe` compilado) na máquina local antes de usar Verificar/Enviar.
-   ```bash
-   # Na pasta static/js/
-   npm install
-   node agent.js
-   ```
-   O agente sobe na porta `3000`. A URL padrão (`http://localhost:3000`) pode ser alterada nas configurações da IDE (ícone ⚙️ → campo "URL do Conector").
+**Categorias de blocos disponíveis:**
 
-3. **Arduino conectado via USB** (opcional para só editar blocos; necessário para upload).
+| Categoria | O que faz |
+|---|---|
+| 🔷 Lógica | Condicionais if/else, operadores booleanos |
+| 🔢 Matemática | Operações aritméticas, funções numéricas |
+| 💬 Texto | Concatenação, conversão de tipos |
+| 📦 Variáveis | Criar, ler e atribuir variáveis |
+| 🔁 Controles | Loops, repetir N vezes, delay |
+| 📥 Entrada | Leitura digital/analógica, Serial read |
+| 📤 Saída | Escrita digital, PWM, Serial print |
+| 🌡️ Sensores | LDR, sensor de linha (TCRT5000), ultrassônico |
+| ⚙️ Servo | Controle de ângulo de servomotor |
+| 📦 Caixinha | LEDs, botões, buzzer — pinos mapeados automaticamente |
+| 🚗 Carrinho | Ponte H, mover frente/trás/esquerda/direita, parar |
+| 🔧 Funções | Definir e chamar funções customizadas |
 
-### Fluxo de uso básico
+---
 
-1. Abrir `interface/index.html` no navegador.
-2. Selecionar a plataforma (Uno, Mega ou Caixinha).
-3. Arrastar blocos da **Toolbox** (painel esquerdo) para o **workspace** central.
-4. Encaixar os blocos dentro do bloco "Iniciar" nos slots de Setup ou Loop.
-5. Acompanhar o código gerado no painel **Live Code** (botão superior direito).
-6. Com o Conector rodando, selecionar a porta COM e clicar em **Verificar** ou **Enviar**.
+### 👁️ Live Code (Código em Tempo Real)
 
-### Estrutura de arquivos relevante
+Painel lateral que exibe o C++ gerado em tempo real enquanto você edita os blocos. Usa o Monaco Editor com syntax highlighting completo. Também tem um modo de edição manual — dá pra digitar direto no editor e desacoplar da geração automática.
+
+Botões disponíveis no painel:
+- **▶ Código** — abre modal com o código final para copiar
+- **⬇ .ino** — baixa o arquivo direto para a máquina
+
+---
+
+### 🎨 Temas
+
+Quatro temas aplicados simultaneamente à UI, ao workspace do Blockly e ao Monaco:
+
+| Tema | Estilo |
+|---|---|
+| **Aura** *(padrão)* | Dark — roxo / neon |
+| **Light** | Claro — estilo GitHub |
+| **Void** | Preto absoluto — alto contraste |
+| **Coffee** | Dark quente — tons terrosos |
+
+Preferência salva em `localStorage`.
+
+---
+
+### 🚀 Compilar e Enviar
+
+Requer o **RoboBlocks Connector** rodando localmente (ver seção abaixo):
+
+- **✔️ Verificar** — compila sem enviar, reporta erros de sintaxe com destaque no Monaco.
+- **🚀 Enviar** — compila e faz upload para a placa na porta COM selecionada.
+- Porta COM detectada automaticamente via Web Serial API.
+- Modo `COM_TESTE` disponível para simular upload sem hardware conectado.
+- Indicador de status do Conector na barra superior (🟢 online / ⚫ offline).
+
+---
+
+### 🔌 Monitor Serial
+
+Painel de terminal integrado à IDE (botão **Monitor**):
+
+- Usa a Web Serial API — requer **Chrome ou Edge**.
+- Seleção de baud rate, auto-scroll, timestamps por mensagem.
+- Envio de comandos para a placa via input de texto (Enter ou botão Enviar).
+
+---
+
+### 🔩 Montagem Virtual de Hardware
+
+Painel visual para planejar as conexões físicas antes de montar na prática:
+
+- Exibe o SVG da placa selecionada (Uno ou Mega), injetado dinamicamente.
+- Adicione componentes e conecte pinos da placa aos pinos do componente com fios roteados.
+- Zoom via scroll ou botões `+` / `−`, pan arrastando o fundo.
+- Estado salvo e restaurado automaticamente.
+
+> ⚠️ Em expansão — catálogo de componentes ainda pequeno (LED implementado, mais chegando).
+
+---
+
+## 🛠️ Como Mexe
+
+### Pré-requisitos
+
+- **Navegador:** Chrome ou Edge (Web Serial API é obrigatória para upload).
+- **RoboBlocks Connector** rodando localmente para compilar/enviar.
+- **Arduino conectado via USB** (só para upload — editar blocos funciona sem).
+
+### Rodando o Conector
+
+```bash
+# Na pasta static/js/
+npm install
+node agent.js
+```
+
+O servidor sobe na porta `3000`. A URL pode ser alterada na IDE em **⚙️ Configurações → URL do Conector**.
+
+### Fluxo básico de uso
+
+```
+1. Abrir interface/index.html no navegador
+2. Escolher a plataforma (Uno, Mega ou Caixinha)
+3. Arrastar blocos da Toolbox para o workspace
+4. Encaixar dentro do bloco "Iniciar" (Setup ou Loop)
+5. Acompanhar o código no painel Live Code
+6. Selecionar porta COM → Verificar → Enviar
+```
+
+---
+
+## 📁 Estrutura de Arquivos
 
 ```
 projeto/
 ├── interface/
-│   ├── index.html          # Ponto de entrada da IDE (abrir no navegador)
-│   └── stylesheet.css      # Estilos e temas da interface
+│   ├── index.html               # Ponto de entrada — abrir no navegador
+│   └── stylesheet.css           # Estilos e temas
 │
 ├── static/js/
-│   ├── main.js             # Lógica principal da IDE, temas, workspace, upload
-│   ├── hardware_assembly.js # Painel de montagem virtual de hardware
-│   ├── virtualBoards.js    # Carregamento dinâmico dos SVGs das placas
-│   ├── agent.js            # Agente local (servidor Express — roda separado)
-│   ├── package.json        # Dependências do agente (Express, cors, etc.)
+│   ├── main.js                  # Lógica principal da IDE
+│   ├── hardware_assembly.js     # Painel de montagem virtual
+│   ├── virtualBoards.js         # Carregamento dinâmico dos SVGs das placas
+│   ├── agent.js                 # Conector local (servidor Express — roda separado)
+│   ├── package.json             # Dependências do Conector
 │   │
 │   └── blocks/
-│       ├── blocks_definition/     # Definição visual dos blocos (JSON + Blockly API)
+│       ├── blocks_definition/   # Definição visual dos blocos (Blockly JSON API)
 │       │   ├── blocks_caixinha.js
 │       │   ├── blocks_carrinho.js
 │       │   ├── blocks_controls.js
@@ -182,90 +211,102 @@ projeto/
 │       │   ├── blocks_servo.js
 │       │   └── ...
 │       │
-│       └── blocks_generators/arduinoGenerator/   # Tradução bloco → código C++
-│           ├── arduinoGenerator_setup.js          # Setup do gerador (includes, protótipos)
+│       └── blocks_generators/arduinoGenerator/  # Bloco → código C++
+│           ├── arduinoGenerator_setup.js
 │           ├── generators_caixinha.js
 │           ├── generators_carrinho.js
 │           └── ...
 │
 └── src/img/
-    ├── Uno.svg             # SVG da placa Arduino Uno (injetado dinamicamente)
-    ├── Mega.svg            # SVG da placa Arduino Mega
-    ├── Caixinha.png        # Imagem do kit educacional
-    └── componentes/        # SVGs de componentes para o painel de montagem
+    ├── Uno.svg                  # SVG da placa Uno (injetado via JS)
+    ├── Mega.svg                 # SVG da placa Mega
+    ├── Caixinha.png             # Imagem do kit educacional
+    └── componentes/             # SVGs dos componentes para montagem
 ```
 
-### Como adicionar um novo bloco
+---
 
-Criar/editar os dois arquivos correspondentes à categoria do bloco:
+## ➕ Como Adicionar um Novo Bloco
 
-**1. Definição visual** (`blocks_definition/blocks_[categoria].js`):
+Dois arquivos para criar/editar, mais uma linha no toolbox:
+
+**1. Definição visual** — `blocks_definition/blocks_[categoria].js`
+
 ```javascript
 Blockly.defineBlocksWithJsonArray([
   {
-    "type": "nome_unico_do_bloco",
-    "message0": "Texto do bloco %1",
+    "type": "meu_bloco",
+    "message0": "Fazer algo com %1",
     "args0": [{ "type": "input_value", "name": "PARAM", "check": "Number" }],
     "previousStatement": null,
     "nextStatement": null,
-    "colour": "#HEX",
-    "tooltip": "Descrição para o usuário."
+    "colour": "#a277ff",
+    "tooltip": "Descrição curta do que o bloco faz."
   }
 ]);
 ```
 
-**2. Gerador de código** (`blocks_generators/arduinoGenerator/generators_[categoria].js`):
+**2. Gerador de código** — `blocks_generators/arduinoGenerator/generators_[categoria].js`
+
 ```javascript
-arduinoGenerator.forBlock["nome_unico_do_bloco"] = function(block) {
+arduinoGenerator.forBlock["meu_bloco"] = function(block) {
   const param = arduinoGenerator.valueToCode(block, "PARAM", arduinoGenerator.ORDER_NONE) || "0";
   return `minhaFuncao(${param});\n`;
 };
 ```
 
-**3. Registrar no toolbox** (dentro do `<toolbox>` no `index.html`):
+**3. Registrar na Toolbox** — dentro do `<toolbox>` no `index.html`
+
 ```xml
-<block type="nome_unico_do_bloco"></block>
+<block type="meu_bloco"></block>
 ```
-
-### Comunicação IDE ↔ Agente Local
-
-O frontend faz requisições HTTP para o agente em `http://localhost:3000`:
-
-| Endpoint | Método | Payload | Descrição |
-|---|---|---|---|
-| `/status` | GET | — | Verifica se o agente está online |
-| `/verify` | POST | `{ code, board }` | Compila o sketch sem upload |
-| `/upload` | POST | `{ code, board, port }` | Compila e envia para a placa |
-
-O campo `board` aceita: `"uno"`, `"mega"`, `"nano"`. A porta `"COM_TESTE"` ativa o modo simulação (sem hardware real).
 
 ---
 
-# Status do Desenvolvimento
+## 🔗 API do Conector
 
-O projeto está em **fase de desenvolvimento ativo**. A estrutura central está funcional, mas várias áreas ainda estão em construção ou planejadas. Considere este documento um retrato do estado atual — não uma especificação final.
+O frontend se comunica com o Conector via HTTP em `http://localhost:3000`:
 
-### O que está funcional hoje
+| Endpoint | Método | Payload | Descrição |
+|---|---|---|---|
+| `/status` | `GET` | — | Verifica se o Conector está online |
+| `/verify` | `POST` | `{ code, board }` | Compila sem fazer upload |
+| `/upload` | `POST` | `{ code, board, port }` | Compila e envia para a placa |
 
-- Fluxo completo de blocos → geração de código → upload via agente.
-- Todas as categorias de blocos listadas acima.
-- Temas visuais e persistência de sessão.
-- Monitor Serial Web.
-- Painel de montagem virtual (em uso ativo, mas em expansão).
-- Suporte a Arduino Uno, Mega e Caixinha Educacional.
+`board` aceita: `"uno"` · `"mega"` · `"nano"` — porta `"COM_TESTE"` ativa modo simulação.
 
-### O que está em andamento ou incompleto
+---
 
-- **Painel de montagem:** catálogo de componentes é pequeno (somente LED implementado com arquivo `.af`/`.svg`). Mais componentes serão adicionados.
-- **Caixinha Educacional:** mapeamento de pinos está hardcoded nos blocos; pode precisar de revisão conforme o hardware evolui.
-- **Agente Local:** atualmente Windows-only (usa `arduino-cli.exe`). Suporte a Linux/macOS não implementado.
-- **Modo Offline completo:** depende do Conector rodando localmente; não há fallback.
-- **Testes automatizados:** ausentes. Todo teste é manual.
-- **README:** contém placeholders (imagens faltando, seções incompletas).
+## 📊 Status do Desenvolvimento
 
-### Pontos de atenção para novos desenvolvedores
+> Este documento é um retrato do estado atual do projeto — não uma especificação final. Muita coisa ainda vai mudar.
 
-- O `main.js` é atualmente monolítico (~1.000 linhas). Refatoração em módulos está implicitamente necessária conforme o projeto cresce.
-- A geração de código usa tipos C++ genéricos (`float` para variáveis de funções). Projetos que precisem de tipos específicos (`int`, `String`) vão requerer ajuste no gerador.
-- O autosave usa `localStorage`, que tem limite de ~5MB e é limpo pelo navegador. Para projetos maiores, considerar exportação explícita como fluxo padrão.
-- A URL do agente (`http://localhost:3000`) é configurável pela UI, mas não há mecanismo de descoberta automática.
+### ✅ Funcionando hoje
+
+- Fluxo completo: blocos → código → upload via Conector
+- Todas as categorias de blocos listadas acima
+- Temas visuais + persistência de sessão
+- Monitor Serial Web
+- Painel de montagem virtual (funcional, em expansão)
+- Suporte a Uno, Mega e Caixinha Educacional
+
+### 🚧 Em andamento / incompleto
+
+- **Montagem virtual** — catálogo de componentes ainda pequeno (só LED por enquanto)
+- **Caixinha** — mapeamento de pinos hardcoded nos blocos, pode precisar de revisão
+- **Conector** — Windows-only por enquanto (`arduino-cli.exe`). Linux/macOS não suportados ainda
+- **Testes automatizados** — ausentes, tudo é manual por enquanto
+
+### ⚠️ Pontos de atenção para devs
+
+- `main.js` está monolítico (~1.000 linhas) — refatoração em módulos vai ser necessária
+- O gerador usa `float` como tipo padrão para variáveis em funções; projetos que precisem de `int` ou `String` vão precisar de ajuste
+- O autosave usa `localStorage` (limite ~5MB, pode ser limpo pelo browser) — para projetos grandes, recomendado exportar o `.xml` manualmente
+
+---
+
+<div align="center">
+
+Feito com 🟣 no IFNMG — Campus Montes Claros
+
+</div>
