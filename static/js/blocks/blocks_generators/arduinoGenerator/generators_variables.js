@@ -26,9 +26,9 @@ arduinoGenerator.forBlock['variables_set'] = function(block) {
   if (isPureNumber) {
      if (!arduinoGenerator.setups_vars_) arduinoGenerator.setups_vars_ = Object.create(null);
      arduinoGenerator.setups_vars_['assign_' + varName] = `${varName} = ${argument0};`;
+     return ``; // adiciona a variável apenas no setup, se for um número puro
   }
-  
-  return `${varName} = ${argument0};\n`;
+  return `${varName} = ${argument0};\n`; // adiciona apenas no void loop
 };
 
 arduinoGenerator.forBlock['variables_get'] = function(block) {
