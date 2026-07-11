@@ -20,8 +20,9 @@ arduinoGenerator.forBlock['io_pin_mode'] = function(block) {
   const pin  = arduinoGenerator.valueToCode(block, 'PIN', arduinoGenerator.ORDER_ATOMIC) || '13';
   const mode = block.getFieldValue('MODE');
 
-  arduinoGenerator.setups_['setup_pinmode_' + pin] = `pinMode(${pin}, ${mode});`;
-  return '';
+  //fix: correção de duplicação em setup
+  //arduinoGenerator.setups_['setup_pinmode_' + pin] = `pinMode(${pin}, ${mode});`;
+  return 'pinMode(${pin}, ${mode});'; // quando o pinmode escreve em setups_ ocorre duplicação quando o bloco é processado por setup_block
 };
 
 arduinoGenerator.forBlock['io_serial_print'] = function(block) {

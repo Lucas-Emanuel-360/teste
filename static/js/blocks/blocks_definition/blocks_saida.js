@@ -3,6 +3,7 @@
 Blockly.defineBlocksWithJsonArray([
   // Bloco: Digital Write (escrever pino digital)
   {
+    //TODO: mudar input de high/low para lista, que nem do bloco definir pino como entrada/saída
     "type": "io_digital_write",
     "message0": "pino digital %1 estado %2",
     "args0": [
