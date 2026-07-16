@@ -1,18 +1,19 @@
 // =============================================================
-// Cria o workspace, define DEFAULT_XML, gerencia toolbox e autosave
-// básico. A restauração inicial mora aqui porque acontece no
-// DOMContentLoaded junto com a seleção de plataforma.
-// =============================================================
-
-// =============================================================
-// workspace-init.js — VERSÃO DE DIAGNÓSTICO (temporária)
+// Cria o workspace, define DEFAULT_XML, gerencia toolbox e
+// seleção de plataforma. A restauração de autosave foi movida inteiramente para core/autosave.js.
 // =============================================================
 
 const workspace = Blockly.inject("blocklyArea", {
   toolbox: document.getElementById("toolbox"),
   renderer: "zelos",
   grid: { spacing: 20, length: 3, colour: "#2a2a2a", snap: true },
-  zoom: { controls: true, wheel: true, startScale: 0.9, maxScale: 3, minScale: 0.3 },
+  zoom: {
+    controls: true,
+    wheel: true,
+    startScale: 0.9,
+    maxScale: 3,
+    minScale: 0.3,
+  },
   trashcan: true,
 });
 
@@ -25,7 +26,6 @@ const DEFAULT_XML = `
 </xml>
 `;
 
-let isLoadingWorkspace = false;
 let currentCode = "";
 
 function checkEmptyState() {
@@ -39,11 +39,19 @@ function checkEmptyState() {
 
 function iniciarIDE(plataforma) {
   localStorage.setItem("roboblocks_plataforma", plataforma);
+
   document.getElementById("selector-screen").style.display = "none";
   document.getElementById("ide-screen").style.display = "flex";
+
   const boardSelect = document.getElementById("boardSelect");
-  boardSelect.value = plataforma === "mega" ? "mega" : "uno";
+  if (plataforma === "mega") {
+    boardSelect.value = "mega";
+  } else {
+    boardSelect.value = "uno";
+  }
+
   atualizarToolbox(plataforma);
+
   setTimeout(() => {
     Blockly.svgResize(workspace);
     handleResponsiveLayout();
@@ -53,6 +61,7 @@ function iniciarIDE(plataforma) {
 function atualizarToolbox(plataforma) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(baseToolboxXML, "text/xml");
+
   if (plataforma === "uno" || plataforma === "mega") {
     const catProjetos = xmlDoc.getElementById("cat_projetos");
     if (catProjetos) {
@@ -64,10 +73,12 @@ function atualizarToolbox(plataforma) {
     const catCarrinho = xmlDoc.getElementById("cat_carrinho");
     const catCdr = xmlDoc.getElementById("cat_cdr");
     const catSensoresFaceis = xmlDoc.getElementById("cat_sensores_faceis");
+
     if (catCarrinho) catCarrinho.remove();
     if (catCdr) catCdr.remove();
     if (catSensoresFaceis) catSensoresFaceis.remove();
   }
+
   workspace.updateToolbox(xmlDoc.documentElement);
 }
 
@@ -77,18 +88,9 @@ document.getElementById("changePlatformBtn").addEventListener("click", () => {
   document.getElementById("selector-screen").style.display = "flex";
 });
 
-// -------------------------------------------------------------
-// DIAGNÓSTICO: loga toda vez que QUALQUER listener de mudança
-// dispara, mostrando o tipo do evento e o estado da flag.
-// -------------------------------------------------------------
-workspace.addChangeListener((e) => {
-  console.log(
-    `[DIAG] evento="${e.type}" isLoadingWorkspace=${isLoadingWorkspace} blocosNoWorkspace=${workspace.getAllBlocks(false).length}`
-  );
-});
-
+// Decide qual tela mostrar (seleção de plataforma vs IDE).
+// A restauração do workspace em si é responsabilidade de autosave.js,
 window.addEventListener("DOMContentLoaded", () => {
-  console.log("[DIAG] === DOMContentLoaded iniciado ===");
   handleResponsiveLayout();
 
   const savedTheme = localStorage.getItem("roboblocks_theme") || "aura";
@@ -101,46 +103,4 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("ide-screen").style.display = "none";
     document.getElementById("selector-screen").style.display = "flex";
   }
-
-  const autoSaveXml = localStorage.getItem("roboblocks_autosave");
-  console.log("[DIAG] autoSaveXml lido do localStorage:", autoSaveXml);
-  console.log("[DIAG] autoSaveXml é truthy?", !!autoSaveXml);
-  console.log("[DIAG] autoSaveXml === xml vazio?", autoSaveXml === '<xml xmlns="https://developers.google.com/blockly/xml"></xml>');
-
-  workspace.clear();
-  console.log("[DIAG] workspace.clear() executado");
-
-  isLoadingWorkspace = true;
-  console.log("[DIAG] isLoadingWorkspace = true");
-
-  if (autoSaveXml && autoSaveXml !== '<xml xmlns="https://developers.google.com/blockly/xml"></xml>') {
-    console.log("[DIAG] entrando no bloco TRY de restauração");
-    try {
-      const xmlDom = Blockly.utils.xml.textToDom(autoSaveXml);
-      console.log("[DIAG] textToDom OK, chamando domToWorkspace...");
-      Blockly.Xml.domToWorkspace(xmlDom, workspace);
-      console.log("[DIAG] domToWorkspace retornou SEM lançar exceção. Blocos agora:", workspace.getAllBlocks(false).length);
-      setTimeout(() => showToast("💾 Projeto restaurado automaticamente!"), 1000);
-    } catch (e) {
-      console.error("[DIAG] EXCEÇÃO capturada no catch:", e.message);
-      console.error("[DIAG] Stack:", e.stack);
-      showToast("⚠️ Falha ao restaurar projeto salvo — veja o console (F12)", "error");
-      const xmlDom = Blockly.utils.xml.textToDom(DEFAULT_XML);
-      Blockly.Xml.domToWorkspace(xmlDom, workspace);
-    }
-  } else {
-    console.log("[DIAG] entrou no ELSE — autoSaveXml era falsy ou igual ao xml vazio. Carregando DEFAULT_XML.");
-    const xmlDom = Blockly.utils.xml.textToDom(DEFAULT_XML);
-    Blockly.Xml.domToWorkspace(xmlDom, workspace);
-  }
-
-  console.log("[DIAG] agendando liberação de isLoadingWorkspace via setTimeout...");
-  setTimeout(() => {
-    isLoadingWorkspace = false;
-    checkEmptyState();
-    console.log("[DIAG] isLoadingWorkspace = false (dentro do setTimeout). Blocos finais:", workspace.getAllBlocks(false).length);
-    console.log("[DIAG] localStorage NESTE MOMENTO:", localStorage.getItem("roboblocks_autosave"));
-  }, 0);
-
-  console.log("[DIAG] === fim síncrono do DOMContentLoaded (setTimeout ainda pendente) ===");
 });

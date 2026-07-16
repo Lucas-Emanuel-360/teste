@@ -15,22 +15,24 @@ document.getElementById("saveBtn").addEventListener("click", () => {
 document.getElementById("loadBtn").addEventListener("click", () =>
   document.getElementById("loadInput").click(),
 );
+
 document.getElementById("loadInput").addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
+    isLoadingWorkspace = true;
+    Blockly.Events.disable();
     try {
       workspace.clear();
-      isLoadingWorkspace = true;
       Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(e.target.result), workspace);
-      setTimeout(() => {
-        isLoadingWorkspace = false;
-        showToast("Projeto carregado!");
-      }, 0);
+      showToast("Projeto carregado!");
     } catch (err) {
-      isLoadingWorkspace = false;
       showToast("Erro ao carregar XML.", "error");
+    } finally {
+      Blockly.Events.enable();
+      isLoadingWorkspace = false;
+      saveWorkspaceNow(); // grava o projeto importado imediatamente
     }
   };
   reader.readAsText(file);
@@ -121,28 +123,38 @@ const xmlPot = `<xml xmlns="https://developers.google.com/blockly/xml">
   </block>
 </xml>`;
 
+
 function loadExample(xml) {
   if (confirm("Isso substituirá seus blocos. Continuar?")) {
-    workspace.clear();
     isLoadingWorkspace = true;
-    Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(xml), workspace);
-    setTimeout(() => {
+    Blockly.Events.disable();
+    try {
+      workspace.clear();
+      Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(xml), workspace);
+    } finally {
+      Blockly.Events.enable();
       isLoadingWorkspace = false;
       workspace.scrollCenter();
-    }, 0);
+      saveWorkspaceNow(); // grava o exemplo carregado imediatamente
+    }
   }
 }
+
 workspace.registerButtonCallback("LOAD_BLINK", () => loadExample(xmlBlink));
 workspace.registerButtonCallback("LOAD_SERVO", () => loadExample(xmlServo));
 workspace.registerButtonCallback("LOAD_POT", () => loadExample(xmlPot));
 
 document.getElementById("clearBtn")?.addEventListener("click", () => {
   if (confirm("Apagar tudo?")) {
-    workspace.clear();
     isLoadingWorkspace = true;
-    Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(DEFAULT_XML), workspace);
-    setTimeout(() => {
+    Blockly.Events.disable();
+    try {
+      workspace.clear();
+      Blockly.Xml.domToWorkspace(Blockly.utils.xml.textToDom(DEFAULT_XML), workspace);
+    } finally {
+      Blockly.Events.enable();
       isLoadingWorkspace = false;
-    }, 0);
+      saveWorkspaceNow(); // grava o estado limpo imediatamente
+    }
   }
 });

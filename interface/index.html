@@ -215,6 +215,18 @@
     </div>
   </div>
 
+  <div id="varNameModal" class="modal-overlay">
+  <div class="modal-box modal-var-name">
+    <h3>Nome da variável</h3>
+    <p id="varNameMessage"></p>
+    <input type="text" id="varNameInput" class="var-name-input" placeholder="ex: velocidade" />
+    <div class="modal-actions">
+      <button id="varNameCancelBtn" class="btn-secondary">Cancelar</button>
+      <button id="varNameConfirmBtn" class="btn-primary">Criar</button>
+    </div>
+  </div>
+</div>
+
   <div id="configModal" class="config-modal" style="display: none;">
     <div class="config-box">
       <div class="config-header">
@@ -714,11 +726,13 @@
   <!-- Núcleo: cria o workspace -->
   <script src="/static/js/core/theme-manager.js"></script>
   <script src="/static/js/core/workspace-init.js"></script>
+  <script src="/static/js/core/autosave.js"></script>    
   <script src="/static/js/core/var-button-bindings.js"></script>
-   <script src="/static/js/core/trashcan-behavior.js"></script>
+  <script src="/static/js/core/trashcan-behavior.js"></script>
 
   <!-- Features que usam o workspace -->
   <script src="/static/js/ui/ui-menu.js"></script>
+  <!-- <script src="/static/js/ui/ui-variable-prompt.js"></script> -->
   <script src="/static/js/editor/monaco-integration.js"></script>
   <script src="/static/js/connector/connector-status.js"></script>
   <script src="/static/js/connector/connector-upload.js"></script>

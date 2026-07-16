@@ -11,23 +11,27 @@ let config = JSON.parse(localStorage.getItem("mymaker_config")) || {
   agentUrl: "http://localhost:3000",
 };
 
-// Gera código C++ a cada mudança relevante, atualiza Live Code e salva XML.
+// Gera código C++ a cada mudança relevante e atualiza Live Code.
 workspace.addChangeListener((e) => {
   if (e.type === Blockly.Events.UI) return;
   if (isLoadingWorkspace) return;
   checkEmptyState();
   try {
-    currentCode = arduinoGenerator.workspaceToCode(workspace);
-
-    if (monacoLiveEditor) {
-      monacoLiveEditor.setValue(currentCode);
-    }
-
-    const xml = Blockly.Xml.workspaceToDom(workspace);
-    localStorage.setItem("roboblocks_autosave", Blockly.Xml.domToText(xml));
+  currentCode = arduinoGenerator.workspaceToCode(workspace);
+  if (monacoLiveEditor) {
+    monacoLiveEditor.setValue(currentCode);
+  }
   } catch (err) {
     console.error("Erro ao gerar código:", err);
-    showToast("⚠️ Erro ao gerar código — veja o console (F12)", "error");
+    showToast("⚠️ Erro ao gerar código — algum bloco está com problema (veja o console)", "error");
+
+    // Tenta identificar e destacar o bloco problemático no workspace,
+    // já que o erro geralmente ocorre "dentro" de um bloco específico
+    // mas o try/catch não informa qual.
+    const stackMatch = err.stack && err.stack.match(/forBlock\.(\w+)/);
+    if (stackMatch) {
+      console.warn(`[RoboBlocks] O erro ocorreu no gerador do tipo de bloco: "${stackMatch[1]}"`);
+    }
   }
 });
 

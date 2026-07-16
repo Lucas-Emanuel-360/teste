@@ -60,7 +60,6 @@ function bindFieldClick(field, handler) {
 }
 
 
-// TODO: deletar variável não funciona
 function rebindVarButtons() {
   workspace.getBlocksByType("setup_block", false).forEach((block) => {
     bindFieldClick(block.getField("ADD_VAR"), () => {
@@ -95,7 +94,6 @@ function rebindVarButtons() {
 // -------------------------------------------------------------
 // Auto-inserção: quando uma variável nasce (via [+] OU via toolbox),
 // cria e encaixa um bloco "definir X como 0" dentro do Setup.
-// TODO: aparece apenas 1x e é com a variável padrão item
 // -------------------------------------------------------------
 let isInsertingVarBlock = false; // trava contra reentrância
 
@@ -162,7 +160,7 @@ function insertVarSetIntoSetup(ws, varId) {
     while (last.getNextBlock()) last = last.getNextBlock();
     last.nextConnection.connect(declBlock.previousConnection);
 
-    console.log("[RoboBlocks] Bloco 'definir X' inserido para:", variable.name, variable.getId());
+    // console.log("[RoboBlocks] Bloco 'definir X' inserido para:", variable.name, variable.getId());
   } catch (err) {
     // Antes, um erro aqui podia interromper o processamento do evento
     // VAR_CREATE inteiro, o que tinha efeito colateral em outros
