@@ -22,14 +22,19 @@ arduinoGenerator.forBlock['io_pin_mode'] = function(block) {
 
   //fix: correção de duplicação em setup
   //arduinoGenerator.setups_['setup_pinmode_' + pin] = `pinMode(${pin}, ${mode});`;
-  return 'pinMode(${pin}, ${mode});'; // quando o pinmode escreve em setups_ ocorre duplicação quando o bloco é processado por setup_block
+  return `pinMode(${pin}, ${mode});\n`; // quando o pinmode escreve em setups_ ocorre duplicação quando o bloco é processado por setup_block
 };
 
 arduinoGenerator.forBlock['io_serial_print'] = function(block) {
   const text = arduinoGenerator.valueToCode(block, 'TEXT', arduinoGenerator.ORDER_ATOMIC) || '""';
 
-  // Usa DB4K_velocidade_serial conforme código original
-  arduinoGenerator.setups_['setup_serial'] = `Serial.begin(${DB4K_velocidade_serial});`;
+  // Reaproveita o mesmo baud rate configurado no monitor serial da UI,
+  // pra garantir que o código gerado sempre bata com o que o usuário
+  // vai usar para ler a saída depois.
+  const baudSelect = document.getElementById("baudRateSelect");
+  const baudRate = baudSelect ? parseInt(baudSelect.value) : 9600;
+
+  arduinoGenerator.setups_['setup_serial'] = `Serial.begin(${baudRate});`;
   return `Serial.println(${text});\n`;
 };
 
