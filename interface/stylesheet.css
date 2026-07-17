@@ -540,7 +540,8 @@ body.theme-light .icon-btn:hover {
 
 /* 6. MODAIS E CONFIG */
 .config-modal,
-.modal {
+.modal,
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -721,6 +722,67 @@ body.theme-light .icon-btn:hover {
   transform: rotate(90deg);
 }
 
+/* JANELA VARIÁVEL */
+.modal-var-name {
+  width: 320px;
+  padding: 24px;
+  text-align: center;
+}
+
+.modal-var-name h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: var(--text-main, #fff);
+}
+
+.modal-var-name p {
+  margin: 0 0 16px;
+  color: var(--text-muted, #aaa);
+  font-size: 14px;
+}
+
+.var-name-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #1e1e1e;
+  color: #fff;
+  font-size: 15px;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+.var-name-input:focus {
+  outline: none;
+  border-color: #F39C12;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: #F39C12;
+  color: #1e1e1e;
+}
+
+.btn-secondary {
+  background: #333;
+  color: #ccc;
+}
+
 /* 7. EXTRAS & MONITOR SERIAL */
 #serialMonitor {
   position: absolute;
@@ -834,7 +896,7 @@ body.theme-light .icon-btn:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  /* REMOVIDO will-change: transform; PARA NÃO PERDER QUALIDADE NO ZOOM */
+  /* TODO REMOVIDO will-change: transform; PARA NÃO PERDER QUALIDADE NO ZOOM */
 }
 
 .zoom-controls {
