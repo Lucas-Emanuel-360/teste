@@ -732,12 +732,12 @@ body.theme-light .icon-btn:hover {
 .modal-var-name h3 {
   margin: 0 0 12px;
   font-size: 18px;
-  color: var(--text-main, #fff);
+  color: #fff;
 }
 
 .modal-var-name p {
   margin: 0 0 16px;
-  color: var(--text-muted, #aaa);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 14px;
 }
 
@@ -745,9 +745,9 @@ body.theme-light .icon-btn:hover {
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid #444;
-  background: #1e1e1e;
-  color: #fff;
+  border: 1px solid var(--border-color);
+  background: var(--bg-input);
+  color: var(--text-main);
   font-size: 15px;
   box-sizing: border-box;
   margin-bottom: 20px;
@@ -755,7 +755,7 @@ body.theme-light .icon-btn:hover {
 
 .var-name-input:focus {
   outline: none;
-  border-color: #F39C12;
+  border-color: var(--primary);
 }
 
 .modal-actions {
@@ -774,13 +774,19 @@ body.theme-light .icon-btn:hover {
 }
 
 .btn-primary {
-  background: #F39C12;
-  color: #1e1e1e;
+  background: var(--primary);
+  color: #fff;
 }
 
 .btn-secondary {
-  background: #333;
-  color: #ccc;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* 7. EXTRAS & MONITOR SERIAL */
