@@ -90,8 +90,11 @@ document.getElementById("verifyBtn").addEventListener("click", async (e) => {
 });
 
 document.getElementById("downloadAgentBtn").addEventListener("click", () => {
+  // O .exe passou de 100MB (limite do GitHub pra arquivo versionado
+  // no repo), então ele é distribuído via GitHub Releases em vez de
+  // ficar direto na árvore do repositório.
   const link = document.createElement("a");
-  link.href = "../static/js/RoboBlocks_Conector/RoboBlocksConnector.exe";
+  link.href = "https://github.com/Lucas-Emanuel-360/teste/releases/download/v1.0.0/RoboBlocksConnector.exe";
   link.download = "RoboBlocksConnector.exe";
   document.body.appendChild(link);
   link.click();

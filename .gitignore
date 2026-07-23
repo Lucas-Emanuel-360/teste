@@ -7,10 +7,15 @@ package-lock.json.bak
 # =============================================================
 # Build do Conector
 # =============================================================
-# RoboBlocksConnector.exe (gerado pelo `npm run build`) e o
-# arduino-cli.exe (asset de entrada do pkg) ficam versionados de
-# propósito — o download no site aponta direto pra esse arquivo
-# dentro do repo, servido pelo GitHub Pages.
+# RoboBlocksConnector.exe passa de 100MB (limite do GitHub pra
+# arquivo versionado no repo), então NÃO fica commitado: é
+# distribuído via GitHub Releases e o botão de download no site
+# aponta direto pra URL da release.
+static/js/RoboBlocksConnector.exe
+static/js/RoboBlocks_Conector/RoboBlocksConnector.exe
+
+# O arduino-cli.exe (asset de ENTRADA do pkg, usado pra embutir no
+# build) continua versionado normalmente — ele é bem menor que 100MB.
 
 # =============================================================
 # Artefatos de execução / temporários
