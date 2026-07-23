@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "description": "Ponte entre Web IDE e Arduino Local",
   "main": "agent.js",
+  "bin": "agent.js",
   "scripts": {
     "start": "node agent.js",
-    "build": "pkg agent.js --targets node18-win-x64 --output MyMakerConnector"
+    "build": "npx @yao-pkg/pkg . --sea --output RoboBlocksConnector.exe"
+  },
+  "pkg": {
+    "assets": [
+      "RoboBlocks_Conector/arduino-cli.exe"
+    ]
   },
   "dependencies": {
     "body-parser": "^1.20.4",

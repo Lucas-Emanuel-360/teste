@@ -53,7 +53,56 @@ document.getElementById("saveConfigBtn").addEventListener("click", () => {
 const agentDot = document.getElementById("agentDot");
 const agentStatusText = document.getElementById("agentStatus");
 
+// === PORTAS SERIAIS ===
+// Busca as portas reais no agente local (via arduino-cli) e popula o select.
+async function refreshPorts(showToasts = true) {
+  const portSelect = document.getElementById("portInput");
+  const refreshBtn = document.getElementById("refreshPortsBtn");
+
+  if (!isAgentOnline) {
+    if (showToasts) showToast("🔌 Conector Offline!", "error");
+    return;
+  }
+
+  const previousValue = portSelect.value;
+  if (refreshBtn) refreshBtn.disabled = true;
+
+  try {
+    const url = new URL(`${config.agentUrl}/ports`);
+    if (config.arduinoPath) url.searchParams.set("arduinoPath", config.arduinoPath);
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    portSelect.innerHTML = '<option value="">Porta COM</option>';
+
+    (data.ports || []).forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.address;
+      opt.textContent = p.label;
+      portSelect.appendChild(opt);
+    });
+
+    // Mantém a porta selecionada antes do refresh, se ela ainda existir na lista
+    if (previousValue && [...portSelect.options].some((o) => o.value === previousValue)) {
+      portSelect.value = previousValue;
+    }
+
+    if (showToasts) {
+      const realPorts = (data.ports || []).filter((p) => p.address !== "COM_TESTE");
+      showToast(realPorts.length ? "🔄 Portas atualizadas!" : "Nenhuma porta real encontrada.", realPorts.length ? "success" : "error");
+    }
+  } catch (e) {
+    if (showToasts) showToast("Erro ao buscar portas no Agente.", "error");
+  } finally {
+    if (refreshBtn) refreshBtn.disabled = false;
+  }
+}
+
+document.getElementById("refreshPortsBtn").addEventListener("click", () => refreshPorts(true));
+
 async function checkAgentStatus() {
+  const wasOnline = isAgentOnline;
   try {
     const res = await fetch(`${config.agentUrl}/status`);
     if (res.ok) {
@@ -61,6 +110,9 @@ async function checkAgentStatus() {
       agentDot.classList.add("status-online");
       agentStatusText.style.color = "var(--text-main)";
       document.getElementById("uploadBtn").title = "Pronto para enviar";
+
+      // Assim que o agente fica online (ou na primeira checagem), busca as portas automaticamente
+      if (!wasOnline) refreshPorts(false);
     }
   } catch (e) {
     isAgentOnline = false;

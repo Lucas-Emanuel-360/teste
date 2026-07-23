@@ -91,7 +91,7 @@ document.getElementById("verifyBtn").addEventListener("click", async (e) => {
 
 document.getElementById("downloadAgentBtn").addEventListener("click", () => {
   const link = document.createElement("a");
-  link.href = "../static/js/RoboBlocksConnector.exe";
+  link.href = "../static/js/RoboBlocks_Conector/RoboBlocksConnector.exe";
   link.download = "RoboBlocksConnector.exe";
   document.body.appendChild(link);
   link.click();
