@@ -133,7 +133,7 @@ Blockly.defineBlocksWithJsonArray([
     ],
     "output": "Number",
     "colour": "#5BA55B",
-    "inputsInline": false,
+    "inputsInline": true, //faz o bloco crescer na horizontal 
     "tooltip": "Mapeia um valor de uma faixa para outra (map do Arduino)"
   },
 // Bloco: Restringir valores
