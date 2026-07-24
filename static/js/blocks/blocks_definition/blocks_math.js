@@ -102,39 +102,24 @@ Blockly.defineBlocksWithJsonArray([
 
   // Bloco: Mapear valores
   {
-    "type": "math_map",
-    "message0": "mapear %1 de [%2 a %3] para [%4 a %5]",
-    "args0": [
-      {
-        "type": "input_value",
-        "name": "VALUE",
-        "check": "Number"
-      },
-      {
-        "type": "input_value",
-        "name": "FROM_LOW",
-        "check": "Number"
-      },
-      {
-        "type": "input_value",
-        "name": "FROM_HIGH",
-        "check": "Number"
-      },
-      {
-        "type": "input_value",
-        "name": "TO_LOW",
-        "check": "Number"
-      },
-      {
-        "type": "input_value",
-        "name": "TO_HIGH",
-        "check": "Number"
-      }
-    ],
-    "output": "Number",
-    "colour": "#5BA55B",
-    "inputsInline": false,
-    "tooltip": "Mapeia um valor de uma faixa para outra (map do Arduino)"
+    {
+  "type": "math_map",
+  "message0": "mapear %1",
+  "args0": [
+    { "type": "input_value", "name": "VALUE", "check": "Number" }
+  ],
+  "message1": "de [%1 a %2] para [%3 a %4]",
+  "args1": [
+    { "type": "input_value", "name": "FROM_LOW", "check": "Number" },
+    { "type": "input_value", "name": "FROM_HIGH", "check": "Number" },
+    { "type": "input_value", "name": "TO_LOW", "check": "Number" },
+    { "type": "input_value", "name": "TO_HIGH", "check": "Number" }
+  ],
+  "output": "Number",
+  "colour": "#5BA55B",
+  "inputsInline": true, // deixa o bloco crescer na horizontal
+  "tooltip": "Mapeia um valor de uma faixa para outra (map do Arduino)"
+}
   },
 // Bloco: Restringir valores
   {
