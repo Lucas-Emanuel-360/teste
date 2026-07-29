@@ -92,50 +92,21 @@ document
   .getElementById("clearSerialBtn")
   .addEventListener("click", () => (document.getElementById("serialOutput").innerHTML = ""));
 
-async function updateComPorts() {
-  const portSelect = document.getElementById("portInput");
-  portSelect.innerHTML = '<option value="">Porta COM</option>';
-  const fakeOption = document.createElement("option");
-  fakeOption.value = "COM_TESTE";
-  fakeOption.text = "🛠️ Porta Virtual (Teste)";
-  fakeOption.style.color = "orange";
-  portSelect.appendChild(fakeOption);
-
-  if (!navigator.serial) return;
-  try {
-    const ports = await navigator.serial.getPorts();
-    ports.forEach((port, index) => {
-      const info = port.getInfo();
-      const vid = info.usbVendorId;
-      let label = `Porta ${index + 1}`;
-      if (vid === 0x2341) label += " (Arduino)";
-      else if (vid) label += ` (USB ${vid})`;
-      const option = document.createElement("option");
-      option.value = `COM${index + 3}`;
-      option.text = label;
-      portSelect.appendChild(option);
-    });
-    const addOption = document.createElement("option");
-    addOption.value = "SEARCH";
-    addOption.text = "➕ Nova Porta...";
-    addOption.style.color = "#61ffca";
-    portSelect.appendChild(addOption);
-  } catch (err) {
-    console.error("Erro portas:", err);
-  }
-}
-
-document.getElementById("refreshPortsBtn").addEventListener("click", updateComPorts);
-document.getElementById("portInput").addEventListener("change", async (e) => {
-  if (e.target.value === "SEARCH") {
-    try {
-      await navigator.serial.requestPort();
-      await updateComPorts();
-      const select = document.getElementById("portInput");
-      if (select.options.length > 2) select.selectedIndex = select.options.length - 2;
-    } catch (err) {
-      e.target.value = "";
-    }
-  }
-});
-updateComPorts();
+// -------------------------------------------------------------
+// NOTA: este arquivo NÃO gerencia mais o select #portInput.
+// Esse select é exclusivo do fluxo de Verificar/Enviar via Conector
+// (arduino-cli), gerenciado em connector/connector-status.js
+// (refreshPorts). O Monitor Serial usa a Web Serial API de forma
+// independente — connectSerialBtn chama navigator.serial.requestPort()
+// diretamente (o próprio navegador mostra o seletor de porta nativo),
+// sem nunca ler o valor de #portInput.
+//
+// Antes havia uma função updateComPorts() aqui que também escrevia
+// em #portInput com uma lista de portas fake (baseada em
+// navigator.serial.getPorts()) e registrava seu próprio listener no
+// mesmo botão #refreshPortsBtn. Como #portInput nunca era lido por
+// este arquivo, esse código só existia para conflitar com
+// connector-status.js: os dois listeners disputavam quem por último
+// escrevia no <select>, e a lista de portas ficava inconsistente
+// dependendo da ordem/tempo das chamadas assíncronas. Removido.
+// -------------------------------------------------------------

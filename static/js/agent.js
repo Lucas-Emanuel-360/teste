@@ -115,10 +115,19 @@ function showWelcomeScreen() {
         } else {
             logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
 
-            // Instala a biblioteca Servo automaticamente
+            // Instala as bibliotecas essenciais automaticamente
             logInfo('Verificando bibliotecas essenciais...');
             exec(`"${cliPath}" lib install Servo`, (errLib) => {
                 if (!errLib) logSuccess('Biblioteca Servo pronta para uso!');
+            });
+            // OneWire + DallasTemperature: usadas pelo bloco de sonda de
+            // temperatura DS18B20. Sem isso, o bloco compila só depois
+            // que o usuário instalar manualmente.
+            exec(`"${cliPath}" lib install "OneWire"`, (errOneWire) => {
+                if (!errOneWire) logSuccess('Biblioteca OneWire pronta para uso!');
+            });
+            exec(`"${cliPath}" lib install "DallasTemperature"`, (errDallas) => {
+                if (!errDallas) logSuccess('Biblioteca DallasTemperature pronta para uso!');
             });
         }
         logInfo('Aguardando comandos da IDE pelo navegador...');

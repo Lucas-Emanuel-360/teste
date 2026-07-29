@@ -49,3 +49,33 @@ arduinoGenerator.forBlock['hardware_pino'] = function(block) {
   const pinoEscolhido = block.getFieldValue('PINO');
   return [pinoEscolhido, arduinoGenerator.ORDER_ATOMIC];
 };
+
+// Sonda de temperatura DS18B20 (1-Wire). Requer as libs OneWire e
+// DallasTemperature no arduino-cli (o Conector instala automaticamente
+// junto com Servo — ver agent.js). Um objeto OneWire/DallasTemperature
+// por pino, pra suportar mais de uma sonda em pinos diferentes.
+arduinoGenerator.forBlock['sensor_temperatura_ds18b20'] = function(block) {
+  const pin = arduinoGenerator.valueToCode(block, 'PIN', arduinoGenerator.ORDER_ATOMIC) || '2';
+
+  arduinoGenerator.definitions_['include_onewire'] = '#include <OneWire.h>';
+  arduinoGenerator.definitions_['include_dallastemperature'] = '#include <DallasTemperature.h>';
+
+  const objName = 'ds18b20_' + pin;
+  arduinoGenerator.definitions_['var_onewire_' + pin] = `OneWire oneWire_${pin}(${pin});`;
+  arduinoGenerator.definitions_['var_dallas_' + pin] = `DallasTemperature ${objName}(&oneWire_${pin});`;
+
+  // requestTemperatures() + getTempCByIndex() precisam rodar juntos,
+  // então empacotamos os dois numa função helper — assim o bloco
+  // continua funcionando como uma expressão de valor (encaixa dentro
+  // de "imprimir no serial", comparações, etc).
+  const funcName = 'lerTemperaturaDS18B20_' + pin;
+  arduinoGenerator.definitions_['func_' + funcName] =
+    `float ${funcName}() {\n` +
+    `  ${objName}.requestTemperatures();\n` +
+    `  return ${objName}.getTempCByIndex(0);\n` +
+    `}\n`;
+
+  arduinoGenerator.setups_['setup_ds18b20_' + pin] = `${objName}.begin();`;
+
+  return [`${funcName}()`, arduinoGenerator.ORDER_ATOMIC];
+};

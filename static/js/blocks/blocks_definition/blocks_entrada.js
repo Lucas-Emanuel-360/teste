@@ -52,6 +52,17 @@ Blockly.defineBlocksWithJsonArray([
     "colour": "#4A90E2",
     "inputsInline": true,
     "tooltip": "Retorna a distância em centímetros lida pelo sensor HC-SR04"
+  },
+  {
+    "type": "sensor_temperatura_ds18b20",
+    "message0": "ler temperatura °C (DS18B20) pino %1",
+    "args0": [
+      { "type": "input_value", "name": "PIN", "check": "Number" }
+    ],
+    "output": "Number",
+    "colour": "#4A90E2",
+    "inputsInline": true,
+    "tooltip": "Lê a temperatura em graus Celsius de uma sonda DS18B20 (1-Wire). Lembre-se do resistor de pull-up (4,7k~10k) entre o fio de dados e o 5V."
   }
 ]);
 

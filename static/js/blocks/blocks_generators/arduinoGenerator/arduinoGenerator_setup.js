@@ -18,6 +18,14 @@ arduinoGenerator.ORDER_RELATIONAL    = 6;
 arduinoGenerator.ORDER_EQUALITY      = 7;
 arduinoGenerator.ORDER_LOGICAL_AND   = 11;
 arduinoGenerator.ORDER_LOGICAL_OR    = 12;
+// BUG FIX: faltava — usado pelos geradores de "Sensores Fáceis"
+// (generators_sensores.js) para expressões condicionais já entre
+// parênteses (ex.: "(analogRead(A0) > 700)"). Sem essa definição,
+// esses blocos retornavam `undefined` como ordem de precedência,
+// o que podia gerar parênteses errados ao combiná-los com
+// logic_operation / controls_if. Fica no mesmo nível de precedência
+// de uma expressão já "atômica" entre parênteses.
+arduinoGenerator.ORDER_CONDITIONAL   = 0;
 arduinoGenerator.ORDER_ASSIGNMENT    = 14;
 arduinoGenerator.ORDER_NONE          = 99;
 

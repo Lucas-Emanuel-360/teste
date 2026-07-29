@@ -800,7 +800,12 @@ body.theme-light .icon-btn:hover {
   border-top: 1px solid var(--border-color);
   color: var(--secondary);
   font-family: var(--font-code);
-  z-index: 50;
+  /* BUG FIX: estava em 50, abaixo do z-index padrão do toolbox do
+     Blockly (.blocklyToolboxDiv), então o menu de categorias ficava
+     por cima do painel quando ele abria. 200 mantém o painel acima
+     do workspace/toolbox do Blockly, mas ainda abaixo do header
+     (1000), side-menu (3000) e modais (2000+). */
+  z-index: 200;
   transition: height 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   display: flex;
   flex-direction: column;
