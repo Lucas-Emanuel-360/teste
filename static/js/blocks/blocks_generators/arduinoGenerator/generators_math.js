@@ -26,6 +26,17 @@ arduinoGenerator.forBlock['math_arithmetic'] = function(block) {
   return [`${arg0}${operator}${arg1}`, order];
 };
 
+// BUG FIX: faltava — o bloco "math_modulo" (resto da divisão) estava
+// na toolbox e era arrastável, mas sem gerador. Isso derrubava
+// arduinoGenerator.workspaceToCode() com exceção não tratada sempre
+// que esse bloco existisse no workspace, travando silenciosamente os
+// botões Verificar/Enviar (getFinalCode() não tem try/catch).
+arduinoGenerator.forBlock['math_modulo'] = function(block) {
+  const dividend = arduinoGenerator.valueToCode(block, 'DIVIDEND', arduinoGenerator.ORDER_MULTIPLICATION) || '0';
+  const divisor = arduinoGenerator.valueToCode(block, 'DIVISOR', arduinoGenerator.ORDER_MULTIPLICATION) || '1';
+  return [`${dividend} % ${divisor}`, arduinoGenerator.ORDER_MULTIPLICATION];
+};
+
 arduinoGenerator.forBlock['math_map'] = function(block) {
   const value = arduinoGenerator.valueToCode(block, 'VALUE', arduinoGenerator.ORDER_NONE) || '0';
   const fL = arduinoGenerator.valueToCode(block, 'FROM_LOW', arduinoGenerator.ORDER_NONE) || '0';

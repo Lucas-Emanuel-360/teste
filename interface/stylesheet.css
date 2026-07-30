@@ -790,6 +790,47 @@ body.theme-light .icon-btn:hover {
 }
 
 /* 7. EXTRAS & MONITOR SERIAL */
+/* BUG FIX: a classe .toast nunca tinha CSS em lugar nenhum do projeto.
+   showToast() (ui-modals.js) é chamada em ~29 lugares no app pra
+   avisar o usuário (erro de geração de código, porta offline, "código
+   copiado", etc.) mas o <div class="toast ..."> renderizava sem
+   nenhum estilo — sem position, sem background, invisível na prática.
+   Foi assim que o bug do bloco math_modulo passou despercebido: o
+   aviso "Erro ao gerar código" já existia no JS, só nunca aparecia. */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--secondary);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 5000;
+  max-width: 80vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.success {
+  border-left-color: var(--secondary);
+}
+
+.toast.error {
+  border-left-color: var(--danger);
+}
+
 #serialMonitor {
   position: absolute;
   bottom: 0;

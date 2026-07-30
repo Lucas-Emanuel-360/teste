@@ -198,7 +198,15 @@ function highlightErrors(logOutput) {
 document.getElementById("showCodeBtn").addEventListener("click", async () => {
   try {
     currentCode = arduinoGenerator.workspaceToCode(workspace);
-  } catch (e) {}
+  } catch (e) {
+    // BUG FIX: antes era um catch vazio, que escondia qualquer erro
+    // de geração de código (ex: bloco sem gerador registrado) — o
+    // Live Code simplesmente não atualizava, sem nenhum aviso, e o
+    // mesmo erro só aparecia de verdade na hora de Verificar/Enviar.
+    console.error("Erro ao gerar código a partir dos blocos:", e);
+    showToast("⚠️ Erro ao gerar código — veja o console (F12) para detalhes.", "error");
+    currentCode = `// Erro ao gerar código: ${e.message}\n// Verifique se algum bloco no workspace está incompleto ou é inválido.`;
+  }
   toggleModal("codeModal", true);
 
   if (!monacoEditorInstance) {
@@ -220,7 +228,13 @@ document.getElementById("showCodeBtn").addEventListener("click", async () => {
 document.getElementById("resetCodeBtn").addEventListener("click", () => {
   if (!confirm("Isso apagará suas edições manuais e trará o código dos blocos de volta. Confirmar?"))
     return;
-  currentCode = arduinoGenerator.workspaceToCode(workspace);
+  try {
+    currentCode = arduinoGenerator.workspaceToCode(workspace);
+  } catch (e) {
+    console.error("Erro ao gerar código a partir dos blocos:", e);
+    showToast("⚠️ Erro ao gerar código — veja o console (F12) para detalhes.", "error");
+    return;
+  }
   isManualEdit = false;
   isSystemUpdate = true;
   monacoEditorInstance.setValue(currentCode);
@@ -246,7 +260,18 @@ function getFinalCode() {
   ) {
     if (monacoEditorInstance) return monacoEditorInstance.getValue();
   }
-  return arduinoGenerator.workspaceToCode(workspace);
+  // BUG FIX: antes chamava workspaceToCode() direto, sem try/catch.
+  // Verificar/Enviar usam esta função — um erro de geração (ex: bloco
+  // sem gerador) travava o clique inteiro sem nenhum aviso pro
+  // usuário. Agora mostra um toast e devolve um comentário no lugar
+  // do código, em vez de quebrar silenciosamente.
+  try {
+    return arduinoGenerator.workspaceToCode(workspace);
+  } catch (e) {
+    console.error("Erro ao gerar código a partir dos blocos:", e);
+    showToast("⚠️ Erro ao gerar código dos blocos — veja o console (F12).", "error");
+    return `// ERRO ao gerar código: ${e.message}`;
+  }
 }
 
 document.getElementById("downloadInoBtn").addEventListener("click", () => {
