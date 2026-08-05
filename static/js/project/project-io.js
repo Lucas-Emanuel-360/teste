@@ -40,13 +40,10 @@ document.getElementById("loadInput").addEventListener("change", (e) => {
 });
 
 // Exemplos: usam setup_block + loop_block (STACK)
+// fix: retirar blocos do setup para não ocorrer duplicação de pinMode() quando o setup processar o pin_mode (que já é feito automaticamente pelo io_analog_write)
 const xmlBlink = `<xml xmlns="https://developers.google.com/blockly/xml">
   <block type="setup_block" x="100" y="50" deletable="false" movable="true">
     <statement name="SETUP">
-      <block type="io_pin_mode">
-        <value name="PIN"><shadow type="math_number"><field name="NUM">13</field></shadow></value>
-        <field name="MODE">OUTPUT</field>
-      </block>
     </statement>
   </block>
   <block type="loop_block" x="100" y="260" deletable="false" movable="true">
