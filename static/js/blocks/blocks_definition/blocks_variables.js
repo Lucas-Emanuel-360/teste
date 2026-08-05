@@ -4,9 +4,6 @@
 // CRÍTICO: deve carregar DEPOIS de qualquer arquivo "padrão" que
 // também defina esses tipos (ex: um bundle de blocos stock), senão
 // esse arquivo é sobrescrito e o campo DELETE_VAR desaparece.
-// Se seu projeto tiver um arquivo tipo "loops.js"/"variables-stock.js"
-// que já define variables_set, MOVA a tag <script> deste arquivo
-// para depois dele no HTML.
 // =============================================================
 
 Blockly.defineBlocksWithJsonArray([

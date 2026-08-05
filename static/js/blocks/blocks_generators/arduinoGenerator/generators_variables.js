@@ -49,3 +49,21 @@ arduinoGenerator.forBlock['variables_change'] = function(block) {
   
   return `${varName} += ${argument0};\n`;
 };
+
+// O Blockly popula a categoria "Variáveis" automaticamente (custom="VARIABLE"
+// no XML da toolbox) usando seu próprio conjunto padrão de blocos. Nesse
+// conjunto, o bloco de "alterar X por Y" tem o tipo nativo "math_change",
+// não "variables_change". Nosso "variables_change" customizado nunca é
+// de fato inserível pela toolbox, então
+// damos um gerador ao tipo que realmente aparece: math_change.
+arduinoGenerator.forBlock['math_change'] = function(block) {
+  const varName = arduinoGenerator.nameDB_.getName(
+    block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+  const argument0 = arduinoGenerator.valueToCode(block, 'DELTA', arduinoGenerator.ORDER_ADDITION) || '1';
+
+  if (!arduinoGenerator.definitions_['var_' + varName]) {
+    arduinoGenerator.definitions_['var_' + varName] = `int ${varName};`;
+  }
+
+  return `${varName} += ${argument0};\n`;
+};
