@@ -3,13 +3,22 @@
 // =============================================================
 
 arduinoGenerator.forBlock["setup_block"] = function (block) {
-  // Sem esta chamada, os blocos dentro do Setup nunca são processados
-  // pelo motor de geração.
+  // Capturamos o texto retornado pelos blocos filhos do SETUP e o
+  // escrevemos em setups_["user_setup"]. Isso é necessário porque
+  // alguns blocos (como lcd_print_line, lcd_clear_display) só
+  // RETORNAM código — eles não se auto-registram em setups_ como
+  // side-effect (diferente de io_digital_write/io_analog_write/io_tone,
+  // que escrevem em chaves próprias tipo "setup_output_<pin>").
   //
-  // Descartamos o texto retornado de propósito: escrevê-lo em setups_
-  // de novo (como a versão antiga fazia) duplicava o pinMode, porque
-  // io_pin_mode JÁ escreve sozinho em setups_ como side-effect.
-  arduinoGenerator.statementToCode(block, "SETUP");
+  // Isso não duplica nada: io_pin_mode hoje só retorna texto (não
+  // se auto-registra mais), então ele também precisa que este
+  // "user_setup" capture seu retorno. pinMode()
+  // sozinho dentro do Setup também some, do mesmo jeito que o
+  // lcd_print_line estava sumindo agora.
+  const setupBranch = arduinoGenerator.statementToCode(block, "SETUP");
+  if (setupBranch) {
+    arduinoGenerator.setups_["user_setup"] = setupBranch;
+  }
   return "";
 };
 arduinoGenerator.forBlock["loop_block"] = function (block) {
