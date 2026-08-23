@@ -10,7 +10,7 @@
   },
   "pkg": {
     "assets": [
-      "RoboBlocks_Conector/arduino-cli.exe"
+      "connector/RoboBlocks_Connector/arduino-cli.exe"
     ]
   },
   "dependencies": {

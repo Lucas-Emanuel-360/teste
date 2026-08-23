@@ -11,6 +11,11 @@ const chalk = require('chalk');
 const figlet = require('figlet');
 const boxen = require('boxen');
 
+/* Escanear o próprio código C++ gerado em busca de #include <Nome.h> antes de compilar, 
+instalando qualquer biblioteca que ainda não esteja presente. */
+const util = require('util');
+const execAsync = util.promisify(exec);
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -89,6 +94,76 @@ function resolveCliPath(arduinoPath) {
     return path.isAbsolute(arduinoPath) ? arduinoPath : path.join(baseDir, arduinoPath);
 }
 
+// =============================================================
+// INSTALAÇÃO DINÂMICA DE BIBLIOTECAS
+// =============================================================
+// Em vez de manter uma lista fixa de bibliotecas "essenciais" (que
+// sempre desatualiza toda vez que um bloco novo é adicionado,
+// escaneamos o próprio código C++ gerado em busca de #include <X.h>
+// e instalamos qualquer uma que ainda não esteja presente, antes de
+// compilar. Isso cobre automaticamente qualquer biblioteca usada por
+// qualquer bloco, presente ou futuro, sem precisar editar este arquivo
+// de novo.
+
+// Headers que já vêm com o core "arduino:avr" (não precisam de
+// "lib install" — tentar instalar geraria erro/atraso desnecessário).
+const CORE_HEADERS = new Set([
+    'Arduino.h', 'Wire.h', 'SPI.h', 'EEPROM.h',
+    'math.h', 'string.h', 'stdio.h', 'stdlib.h',
+]);
+
+// Mapeamento de nome de header -> nome do pacote no Library Manager,
+// para os casos em que o nome não bate 1:1 (a maioria bate, mas é bom
+// ter esse mapa central caso apareça uma exceção no futuro).
+const HEADER_TO_LIBRARY = {
+    'LiquidCrystal.h': 'LiquidCrystal',
+    'Servo.h': 'Servo',
+    'OneWire.h': 'OneWire',
+    'DallasTemperature.h': 'DallasTemperature',
+};
+
+// Cache em memória: bibliotecas que já confirmamos instaladas nesta
+// sessão do Conector, para não rodar "lib install" de novo a cada
+// clique em Verificar/Enviar (isso deixaria cada compilação lenta).
+const librariesConfirmed = new Set();
+
+function extractIncludedHeaders(code) {
+    const regex = /#include\s*[<"]([^">]+)[>"]/g;
+    const headers = new Set();
+    let match;
+    while ((match = regex.exec(code)) !== null) {
+        headers.add(match[1]);
+    }
+    return headers;
+}
+
+async function ensureLibrariesForCode(code, cliPath) {
+    const headers = extractIncludedHeaders(code);
+
+    for (const header of headers) {
+        if (CORE_HEADERS.has(header)) continue;
+        if (librariesConfirmed.has(header)) continue;
+
+        const libName = HEADER_TO_LIBRARY[header] || header.replace(/\.h$/, '');
+
+        try {
+            logInfo(`Verificando biblioteca necessária: ${libName} (de #include <${header}>)...`);
+            await execAsync(`"${cliPath}" lib install "${libName}"`);
+            logSuccess(`Biblioteca ${libName} pronta para uso!`);
+            librariesConfirmed.add(header);
+        } catch (err) {
+            // Não interrompe a compilação por causa disso — se a lib já
+            // estava instalada, "lib install" pode retornar algo que o
+            // arduino-cli trata como não-erro-fatal em versões diferentes,
+            // ou pode ser um nome de header sem correspondência exata no
+            // Library Manager (ex: headers internos do próprio sketch).
+            // Nesses casos, deixamos o erro real de compilação (se houver)
+            // aparecer normalmente pro usuário depois.
+            logWarn(`Não foi possível instalar automaticamente "${libName}": ${err.message}`);
+        }
+    }
+}
+
 function showWelcomeScreen() {
     console.clear();
     console.log(
@@ -110,27 +185,18 @@ function showWelcomeScreen() {
     const cliPath = ensureManagedCli();
 
     exec(`"${cliPath}" core install arduino:avr`, (err, stdout, stderr) => {
-        if (err) {
-            logWarn('Aviso: Não foi possível atualizar as placas (sem internet na 1ª vez?).');
-        } else {
-            logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
-
-            // Instala as bibliotecas essenciais automaticamente
-            logInfo('Verificando bibliotecas essenciais...');
-            exec(`"${cliPath}" lib install Servo`, (errLib) => {
-                if (!errLib) logSuccess('Biblioteca Servo pronta para uso!');
-            });
-            // OneWire + DallasTemperature: usadas pelo bloco de sonda de
-            // temperatura DS18B20. Sem isso, o bloco compila só depois
-            // que o usuário instalar manualmente.
-            exec(`"${cliPath}" lib install "OneWire"`, (errOneWire) => {
-                if (!errOneWire) logSuccess('Biblioteca OneWire pronta para uso!');
-            });
-            exec(`"${cliPath}" lib install "DallasTemperature"`, (errDallas) => {
-                if (!errDallas) logSuccess('Biblioteca DallasTemperature pronta para uso!');
-            });
-        }
-        logInfo('Aguardando comandos da IDE pelo navegador...');
+    if (err) {
+        logWarn('Aviso: Não foi possível atualizar as placas (sem internet na 1ª vez?).');
+    } else {
+        logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
+    }
+    // As bibliotecas não são mais pré-instaladas em bloco no startup —
+    // cada uma é instalada sob demanda, na primeira vez que um código
+    // com o #include correspondente é compilado/enviado (ver
+    // ensureLibrariesForCode). Isso garante cobertura automática para
+    // qualquer biblioteca usada por qualquer bloco, sem precisar manter
+    // uma lista manual aqui.
+    logInfo('Aguardando comandos da IDE pelo navegador...');
     });
 }
 
@@ -200,7 +266,7 @@ app.get('/ports', (req, res) => {
 });
 
 // === ROTA 1: VERIFICAR (COMPILAR) ===
-app.post('/verify', (req, res) => {
+app.post('/verify', async (req, res) => {
     const { code, board, arduinoPath } = req.body;
     logInfo(`Pedido de Verificação (Compile) para: ${chalk.cyan(board)}`);
 
@@ -213,19 +279,23 @@ app.post('/verify', (req, res) => {
     }
 
     try {
-        const sketchDir = saveTempFile(code);
-        const fqbn = getFQBN(board);
-        const targetCli = resolveCliPath(arduinoPath);
+    const fqbn = getFQBN(board);
+    const targetCli = resolveCliPath(arduinoPath);
 
-        // --no-color adicionado para limpar os caracteres ANSI no front-end
-        execFile(targetCli, ['compile', '--no-color', '--fqbn', fqbn, sketchDir], (error, stdout, stderr) => {
-            if (error) {
-                logError('Erro na compilação.');
-                return res.json({ success: false, output: stdout + "\n" + stderr });
-            }
-            logSuccess('Código verificado com sucesso!');
-            res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
-        });
+    // Garante que qualquer biblioteca referenciada por #include no
+    // código gerado já está instalada, ANTES de tentar compilar.
+    await ensureLibrariesForCode(code, targetCli);
+
+    const sketchDir = saveTempFile(code);
+
+    execFile(targetCli, ['compile', '--no-color', '--fqbn', fqbn, sketchDir], (error, stdout, stderr) => {
+        if (error) {
+            logError('Erro na compilação.');
+            return res.json({ success: false, output: stdout + "\n" + stderr });
+        }
+        logSuccess('Código verificado com sucesso!');
+        res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
+    });
     } catch (e) {
         logError(e.message);
         res.status(500).json({ success: false, output: e.message });
@@ -233,7 +303,7 @@ app.post('/verify', (req, res) => {
 });
 
 // === ROTA 2: UPLOAD (ENVIAR) ===
-app.post('/upload', (req, res) => {
+app.post('/upload', async (req, res) => {
     const { code, board, port, arduinoPath } = req.body;
 
     if (port === "COM_TESTE") {
@@ -252,9 +322,12 @@ app.post('/upload', (req, res) => {
     logInfo(`Iniciando Upload: ${chalk.cyan(board)} na porta ${chalk.yellow(port)}`);
 
     try {
-        const sketchDir = saveTempFile(code);
         const fqbn = getFQBN(board);
         const targetCli = resolveCliPath(arduinoPath);
+
+        await ensureLibrariesForCode(code, targetCli);
+
+        const sketchDir = saveTempFile(code);
 
         // --no-color adicionado para limpar os caracteres ANSI no front-end
         execFile(targetCli, ['compile', '--upload', '--no-color', '--fqbn', fqbn, '-p', port, sketchDir], (error, stdout, stderr) => {

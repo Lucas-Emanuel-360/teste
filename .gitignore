@@ -11,8 +11,8 @@ package-lock.json.bak
 # arquivo versionado no repo), então NÃO fica commitado: é
 # distribuído via GitHub Releases e o botão de download no site
 # aponta direto pra URL da release.
-static/js/RoboBlocksConnector.exe
-static/js/RoboBlocks_Conector/RoboBlocksConnector.exe
+connector/RoboBlocksConnector.exe
+connector/RoboBlocks_Connector/RoboBlocksConnector.exe
 
 # O arduino-cli.exe (asset de ENTRADA do pkg, usado pra embutir no
 # build) continua versionado normalmente — ele é bem menor que 100MB.
