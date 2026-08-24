@@ -54,3 +54,4 @@ desktop.ini
 # =============================================================
 .env
 .env.local
+/static/js/connector/dist

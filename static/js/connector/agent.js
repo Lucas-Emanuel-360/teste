@@ -3,16 +3,16 @@ const bodyParser = require('body-parser');
 const { exec, execFile } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const cors = require('cors');
-const os = require('os'); // Acesso à pasta temporária e pasta de dados do usuário
+const os = require('os');
+const AdmZip = require('adm-zip');
+const tar = require('tar');
 
-// Bibliotecas visuais
 const chalk = require('chalk');
 const figlet = require('figlet');
 const boxen = require('boxen');
 
-/* Escanear o próprio código C++ gerado em busca de #include <Nome.h> antes de compilar, 
-instalando qualquer biblioteca que ainda não esteja presente. */
 const util = require('util');
 const execAsync = util.promisify(exec);
 
@@ -22,72 +22,147 @@ app.use(bodyParser.json());
 
 const PORT = 3000;
 
-// === FUNÇÕES DE LOG VISUAL ===
 const logInfo = (msg) => console.log(`${chalk.blue('ℹ')} ${msg}`);
 const logSuccess = (msg) => console.log(`${chalk.green('✔')} ${msg}`);
 const logError = (msg) => console.log(`${chalk.red('✖')} ${msg}`);
 const logWarn = (msg) => console.log(`${chalk.yellow('⚠')} ${msg}`);
 
-// Quando compilado com pkg, __dirname aponta pra dentro do snapshot virtual do executável,
-// não pra pasta real no disco. process.execPath é o caminho real do .exe nesse caso.
 const baseDir = process.pkg ? path.dirname(process.execPath) : __dirname;
 
 // =============================================================
-// ARDUINO-CLI EMBUTIDO
+// ARDUINO-CLI SOB DEMANDA (multiplataforma)
 // =============================================================
-// O arduino-cli.exe agora vai DENTRO do próprio executável do Conector
-// (via "assets" do pkg no package.json). fs.readFileSync consegue ler
-// esse arquivo normalmente a partir de __dirname, mesmo dentro do
-// snapshot virtual — é assim que o pkg expõe os assets embutidos.
-//
-// Só que não dá pra RODAR (execFile) um binário que está "dentro" do
-// snapshot virtual. Por isso, na primeira execução, extraímos o
-// arduino-cli.exe pra uma pasta real e persistente no disco do usuário,
-// e nas próximas vezes só reaproveitamos o que já foi extraído.
-const BUNDLED_CLI_PATH = path.join(__dirname, 'RoboBlocks_Conector', 'arduino-cli.exe');
+// Em vez de embutir um .exe de ~40MB pra cada SO dentro do binário
+// (o que triplicaria o tamanho do Conector), baixamos o arduino-cli
+// certo pra cada plataforma na primeira execução, direto da fonte
+// oficial. Fica salvo numa pasta persistente e as próximas vezes só
+// reaproveitamos o que já foi baixado.
 
-const APP_DATA_DIR = path.join(process.env.LOCALAPPDATA || process.env.APPDATA || os.tmpdir(), 'RoboBlocks');
-const MANAGED_CLI_DIR = path.join(APP_DATA_DIR, 'bin');
-const MANAGED_CLI_PATH = path.join(MANAGED_CLI_DIR, 'arduino-cli.exe');
+// Ajuste aqui quando quiser atualizar a versão do CLI usada pelo Conector.
+const ARDUINO_CLI_VERSION = '1.5.1';
 
-// Valor padrão que o frontend manda quando o usuário nunca mexeu nas
-// configurações (ver connector-status.js). Quando o valor recebido é
-// exatamente esse "default", tratamos como "usar o cli gerenciado
-// automaticamente" em vez de resolver como um caminho de arquivo
-// literal. Isso mantém compatibilidade total com o frontend existente,
-// sem precisar mudar uma linha lá.
+// Sentinel que o front-end manda quando o usuário não mexeu nas
+// configurações avançadas (ver connector-status.js) — nesse caso
+// tratamos como "usa o cli gerenciado automaticamente".
 const DEFAULT_CLI_SENTINEL = 'arduino-cli.exe';
 
-// Extrai o arduino-cli embutido pra uma pasta persistente, se ainda não
-// tiver sido extraído antes. Idempotente: em execuções seguintes, só
-// confere se o arquivo já existe e devolve o caminho, sem reescrever
-// dezenas de MB em disco toda vez que o Conector abre.
-function ensureManagedCli() {
+// Descobre nome do binário e do pacote a baixar pra plataforma atual.
+function getPlatformTarget() {
+    const platform = os.platform(); // 'win32' | 'linux' | 'darwin'
+    const arch = os.arch();         // 'x64' | 'arm64' | 'ia32'
+
+    const archMap = { x64: '64bit', ia32: '32bit', arm64: 'ARM64' };
+    const archName = archMap[arch] || '64bit';
+
+    if (platform === 'win32') {
+        return {
+            platform,
+            binaryName: 'arduino-cli.exe',
+            assetName: `arduino-cli_${ARDUINO_CLI_VERSION}_Windows_${archName}.zip`,
+            isZip: true,
+        };
+    }
+    if (platform === 'darwin') {
+        return {
+            platform,
+            binaryName: 'arduino-cli',
+            assetName: `arduino-cli_${ARDUINO_CLI_VERSION}_macOS_${archName}.tar.gz`,
+            isZip: false,
+        };
+    }
+    // linux e demais Unix caem aqui
+    return {
+        platform,
+        binaryName: 'arduino-cli',
+        assetName: `arduino-cli_${ARDUINO_CLI_VERSION}_Linux_${archName}.tar.gz`,
+        isZip: false,
+    };
+}
+
+// Pasta de dados persistente, no padrão de cada SO.
+function getAppDataDir() {
+    const platform = os.platform();
+    if (platform === 'win32') {
+        return path.join(process.env.LOCALAPPDATA || process.env.APPDATA || os.tmpdir(), 'RoboBlocks');
+    }
+    if (platform === 'darwin') {
+        return path.join(os.homedir(), 'Library', 'Application Support', 'RoboBlocks');
+    }
+    return path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), 'RoboBlocks');
+}
+
+const APP_DATA_DIR = getAppDataDir();
+const MANAGED_CLI_DIR = path.join(APP_DATA_DIR, 'bin');
+
+// Baixa um arquivo seguindo redirecionamentos (downloads.arduino.cc
+// costuma redirecionar pro CDN antes de servir o arquivo de verdade).
+function downloadFile(url, destPath) {
+    return new Promise((resolve, reject) => {
+        const request = (targetUrl) => {
+            https.get(targetUrl, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    return request(res.headers.location);
+                }
+                if (res.statusCode !== 200) {
+                    return reject(new Error(`Download falhou com status ${res.statusCode}`));
+                }
+                const fileStream = fs.createWriteStream(destPath);
+                res.pipe(fileStream);
+                fileStream.on('finish', () => fileStream.close(resolve));
+                fileStream.on('error', reject);
+            }).on('error', reject);
+        };
+        request(url);
+    });
+}
+
+async function extractArchive(archivePath, destDir, isZip) {
+    if (isZip) {
+        new AdmZip(archivePath).extractAllTo(destDir, true);
+    } else {
+        await tar.x({ file: archivePath, cwd: destDir });
+    }
+}
+
+// Garante que o arduino-cli certo pra essa plataforma está disponível
+// localmente. Idempotente: se já foi baixado antes, só devolve o path.
+async function ensureManagedCli() {
+    const target = getPlatformTarget();
+    const managedPath = path.join(MANAGED_CLI_DIR, target.binaryName);
+
+    if (fs.existsSync(managedPath) && fs.statSync(managedPath).size > 0) {
+        return managedPath;
+    }
+
+    logInfo(`Primeira execução: baixando arduino-cli v${ARDUINO_CLI_VERSION} para ${target.platform}...`);
+    fs.mkdirSync(MANAGED_CLI_DIR, { recursive: true });
+
+    const downloadUrl = `https://downloads.arduino.cc/arduino-cli/${target.assetName}`;
+    const archivePath = path.join(MANAGED_CLI_DIR, target.assetName);
+
     try {
-        if (fs.existsSync(MANAGED_CLI_PATH) && fs.statSync(MANAGED_CLI_PATH).size > 0) {
-            return MANAGED_CLI_PATH;
+        await downloadFile(downloadUrl, archivePath);
+        await extractArchive(archivePath, MANAGED_CLI_DIR, target.isZip);
+        fs.unlinkSync(archivePath); // só o binário interessa, descarta o zip/tar.gz
+
+        // Linux e macOS não vêm com a permissão de execução setada depois
+        // de extraído — sem isso, execFile derruba EACCES.
+        if (target.platform !== 'win32') {
+            fs.chmodSync(managedPath, 0o755);
         }
 
-        logInfo('Primeira execução: extraindo arduino-cli embutido no executável...');
-        fs.mkdirSync(MANAGED_CLI_DIR, { recursive: true });
-
-        const cliBuffer = fs.readFileSync(BUNDLED_CLI_PATH);
-        fs.writeFileSync(MANAGED_CLI_PATH, cliBuffer);
-
-        logSuccess(`arduino-cli pronto em: ${MANAGED_CLI_PATH}`);
-        return MANAGED_CLI_PATH;
+        logSuccess(`arduino-cli pronto em: ${managedPath}`);
+        return managedPath;
     } catch (e) {
-        logError(`Não foi possível extrair o arduino-cli embutido: ${e.message}`);
-        // Fallback pro comportamento antigo (dois arquivos soltos na
-        // mesma pasta), só por segurança/compatibilidade.
-        return path.join(baseDir, 'arduino-cli.exe');
+        logError(`Não foi possível baixar o arduino-cli: ${e.message}`);
+        throw e;
     }
 }
 
 // Resolve o caminho do arduino-cli a usar numa chamada específica:
 // - Config padrão (ou nada enviado) → cli gerenciado automaticamente.
 // - Caminho absoluto customizado pelo usuário (avançado) → respeita.
-function resolveCliPath(arduinoPath) {
+async function resolveCliPath(arduinoPath) {
     if (!arduinoPath || arduinoPath === DEFAULT_CLI_SENTINEL) {
         return ensureManagedCli();
     }
@@ -95,26 +170,13 @@ function resolveCliPath(arduinoPath) {
 }
 
 // =============================================================
-// INSTALAÇÃO DINÂMICA DE BIBLIOTECAS
+// INSTALAÇÃO DINÂMICA DE BIBLIOTECAS (sem mudanças)
 // =============================================================
-// Em vez de manter uma lista fixa de bibliotecas "essenciais" (que
-// sempre desatualiza toda vez que um bloco novo é adicionado,
-// escaneamos o próprio código C++ gerado em busca de #include <X.h>
-// e instalamos qualquer uma que ainda não esteja presente, antes de
-// compilar. Isso cobre automaticamente qualquer biblioteca usada por
-// qualquer bloco, presente ou futuro, sem precisar editar este arquivo
-// de novo.
-
-// Headers que já vêm com o core "arduino:avr" (não precisam de
-// "lib install" — tentar instalar geraria erro/atraso desnecessário).
 const CORE_HEADERS = new Set([
     'Arduino.h', 'Wire.h', 'SPI.h', 'EEPROM.h',
     'math.h', 'string.h', 'stdio.h', 'stdlib.h',
 ]);
 
-// Mapeamento de nome de header -> nome do pacote no Library Manager,
-// para os casos em que o nome não bate 1:1 (a maioria bate, mas é bom
-// ter esse mapa central caso apareça uma exceção no futuro).
 const HEADER_TO_LIBRARY = {
     'LiquidCrystal.h': 'LiquidCrystal',
     'Servo.h': 'Servo',
@@ -122,9 +184,6 @@ const HEADER_TO_LIBRARY = {
     'DallasTemperature.h': 'DallasTemperature',
 };
 
-// Cache em memória: bibliotecas que já confirmamos instaladas nesta
-// sessão do Conector, para não rodar "lib install" de novo a cada
-// clique em Verificar/Enviar (isso deixaria cada compilação lenta).
 const librariesConfirmed = new Set();
 
 function extractIncludedHeaders(code) {
@@ -152,13 +211,6 @@ async function ensureLibrariesForCode(code, cliPath) {
             logSuccess(`Biblioteca ${libName} pronta para uso!`);
             librariesConfirmed.add(header);
         } catch (err) {
-            // Não interrompe a compilação por causa disso — se a lib já
-            // estava instalada, "lib install" pode retornar algo que o
-            // arduino-cli trata como não-erro-fatal em versões diferentes,
-            // ou pode ser um nome de header sem correspondência exata no
-            // Library Manager (ex: headers internos do próprio sketch).
-            // Nesses casos, deixamos o erro real de compilação (se houver)
-            // aparecer normalmente pro usuário depois.
             logWarn(`Não foi possível instalar automaticamente "${libName}": ${err.message}`);
         }
     }
@@ -166,50 +218,42 @@ async function ensureLibrariesForCode(code, cliPath) {
 
 function showWelcomeScreen() {
     console.clear();
-    console.log(
-        chalk.hex('#a277ff')(
-            figlet.textSync('RoboBlocks', { horizontalLayout: 'full' })
-        )
-    );
+    console.log(chalk.hex('#a277ff')(figlet.textSync('RoboBlocks', { horizontalLayout: 'full' })));
 
     console.log(boxen(
         `${chalk.bold('Status:')} ${chalk.green('Online')} 🟢\n` +
         `${chalk.bold('Porta:')}  ${PORT}\n` +
-        `${chalk.bold('Motor:')}  Arduino CLI (Embutido)`,
+        `${chalk.bold('SO:')}     ${os.platform()} (${os.arch()})\n` +
+        `${chalk.bold('Motor:')}  Arduino CLI (Gerenciado)`,
         { padding: 1, margin: 1, borderStyle: 'round', borderColor: 'cyan' }
     ));
 
     logInfo('Verificando dependências do Arduino (pode demorar na 1ª vez)...');
 
-    // Garante que o arduino-cli embutido já foi extraído antes de usá-lo
-    const cliPath = ensureManagedCli();
-
-    exec(`"${cliPath}" core install arduino:avr`, (err, stdout, stderr) => {
-    if (err) {
-        logWarn('Aviso: Não foi possível atualizar as placas (sem internet na 1ª vez?).');
-    } else {
-        logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
-    }
-    // As bibliotecas não são mais pré-instaladas em bloco no startup —
-    // cada uma é instalada sob demanda, na primeira vez que um código
-    // com o #include correspondente é compilado/enviado (ver
-    // ensureLibrariesForCode). Isso garante cobertura automática para
-    // qualquer biblioteca usada por qualquer bloco, sem precisar manter
-    // uma lista manual aqui.
-    logInfo('Aguardando comandos da IDE pelo navegador...');
-    });
+    (async () => {
+        try {
+            const cliPath = await ensureManagedCli();
+            exec(`"${cliPath}" core install arduino:avr`, (err) => {
+                if (err) {
+                    logWarn('Aviso: Não foi possível atualizar as placas (sem internet na 1ª vez?).');
+                } else {
+                    logSuccess('Placas (Uno/Mega/Nano) prontas para uso!');
+                }
+                logInfo('Aguardando comandos da IDE pelo navegador...');
+            });
+        } catch (e) {
+            logError('Não foi possível preparar o arduino-cli. O Conector vai iniciar mesmo assim.');
+        }
+    })();
 }
 
-// === HELPER: Mapear Placa para FQBN do arduino-cli ===
 function getFQBN(boardName) {
     if (boardName === 'mega') return 'arduino:avr:mega';
     if (boardName === 'nano') return 'arduino:avr:nano';
-    return 'arduino:avr:uno'; // Default UNO
+    return 'arduino:avr:uno';
 }
 
-// === HELPER: Salvar Arquivo Temporário ===
 function saveTempFile(code) {
-    // Aponta para a pasta temporária do próprio SO em vez da pasta do projeto
     const sketchDir = path.join(os.tmpdir(), 'sketch_temp');
     if (!fs.existsSync(sketchDir)) fs.mkdirSync(sketchDir);
 
@@ -222,19 +266,23 @@ app.get('/status', (req, res) => {
     res.json({ status: 'online', engine: 'arduino-cli', version: '2.1.0' });
 });
 
-// === ROTA NOVA: LISTAR PORTAS DISPONÍVEIS ===
-app.get('/ports', (req, res) => {
+app.get('/ports', async (req, res) => {
     const arduinoPath = req.query.arduinoPath;
-    const targetCli = resolveCliPath(arduinoPath);
 
     logInfo('Buscando portas seriais conectadas...');
+    const simulatedPort = { address: 'COM_TESTE', label: '🧪 Simulação (Teste)' };
+
+    let targetCli;
+    try {
+        targetCli = await resolveCliPath(arduinoPath);
+    } catch (e) {
+        logError(`Não foi possível preparar o arduino-cli: ${e.message}`);
+        return res.json({ success: true, ports: [simulatedPort], output: e.message });
+    }
 
     execFile(targetCli, ['board', 'list', '--format', 'json'], (error, stdout, stderr) => {
-        // Sempre oferece a porta de simulação, mesmo se o arduino-cli falhar
-        const simulatedPort = { address: 'COM_TESTE', label: '🧪 Simulação (Teste)' };
-
         if (error) {
-            logWarn('Não foi possível listar as portas (arduino-cli embutido falhou ao iniciar?).');
+            logWarn('Não foi possível listar as portas (arduino-cli falhou ao iniciar?).');
             logError(`Detalhe: ${error.message}`);
             if (stderr) logError(`Stderr: ${stderr}`);
             return res.json({ success: true, ports: [simulatedPort], output: stderr || error.message });
@@ -265,7 +313,6 @@ app.get('/ports', (req, res) => {
     });
 });
 
-// === ROTA 1: VERIFICAR (COMPILAR) ===
 app.post('/verify', async (req, res) => {
     const { code, board, arduinoPath } = req.body;
     logInfo(`Pedido de Verificação (Compile) para: ${chalk.cyan(board)}`);
@@ -279,30 +326,26 @@ app.post('/verify', async (req, res) => {
     }
 
     try {
-    const fqbn = getFQBN(board);
-    const targetCli = resolveCliPath(arduinoPath);
+        const fqbn = getFQBN(board);
+        const targetCli = await resolveCliPath(arduinoPath);
 
-    // Garante que qualquer biblioteca referenciada por #include no
-    // código gerado já está instalada, ANTES de tentar compilar.
-    await ensureLibrariesForCode(code, targetCli);
+        await ensureLibrariesForCode(code, targetCli);
+        const sketchDir = saveTempFile(code);
 
-    const sketchDir = saveTempFile(code);
-
-    execFile(targetCli, ['compile', '--no-color', '--fqbn', fqbn, sketchDir], (error, stdout, stderr) => {
-        if (error) {
-            logError('Erro na compilação.');
-            return res.json({ success: false, output: stdout + "\n" + stderr });
-        }
-        logSuccess('Código verificado com sucesso!');
-        res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
-    });
+        execFile(targetCli, ['compile', '--no-color', '--fqbn', fqbn, sketchDir], (error, stdout, stderr) => {
+            if (error) {
+                logError('Erro na compilação.');
+                return res.json({ success: false, output: stdout + "\n" + stderr });
+            }
+            logSuccess('Código verificado com sucesso!');
+            res.json({ success: true, output: stdout || "Compilação concluída sem erros." });
+        });
     } catch (e) {
         logError(e.message);
         res.status(500).json({ success: false, output: e.message });
     }
 });
 
-// === ROTA 2: UPLOAD (ENVIAR) ===
 app.post('/upload', async (req, res) => {
     const { code, board, port, arduinoPath } = req.body;
 
@@ -323,13 +366,11 @@ app.post('/upload', async (req, res) => {
 
     try {
         const fqbn = getFQBN(board);
-        const targetCli = resolveCliPath(arduinoPath);
+        const targetCli = await resolveCliPath(arduinoPath);
 
         await ensureLibrariesForCode(code, targetCli);
-
         const sketchDir = saveTempFile(code);
 
-        // --no-color adicionado para limpar os caracteres ANSI no front-end
         execFile(targetCli, ['compile', '--upload', '--no-color', '--fqbn', fqbn, '-p', port, sketchDir], (error, stdout, stderr) => {
             if (error) {
                 logError('Falha no upload.');
@@ -338,7 +379,6 @@ app.post('/upload', async (req, res) => {
             logSuccess('Upload realizado com sucesso!');
             res.json({ success: true, output: stdout });
         });
-
     } catch (e) {
         logError(e.message);
         res.status(500).json({ success: false, output: e.message });
