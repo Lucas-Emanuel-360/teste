@@ -6,20 +6,17 @@
   "bin": "agent.js",
   "scripts": {
     "start": "node agent.js",
-    "build": "npx @yao-pkg/pkg . --sea --output RoboBlocksConnector.exe"
-  },
-  "pkg": {
-    "assets": [
-      "connector/RoboBlocks_Connector/arduino-cli.exe"
-    ]
+    "build": "npx pkg@5.8.1 . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --out-path dist"
   },
   "dependencies": {
+    "adm-zip": "^0.5.10",
     "body-parser": "^1.20.4",
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
     "cors": "^2.8.6",
     "express": "^4.22.1",
     "figlet": "^1.11.0",
-    "node-notifier": "^10.0.1"
+    "node-notifier": "^10.0.1",
+    "tar": "^6.2.1"
   }
 }

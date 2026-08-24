@@ -90,14 +90,34 @@ document.getElementById("verifyBtn").addEventListener("click", async (e) => {
 });
 
 document.getElementById("downloadAgentBtn").addEventListener("click", () => {
-  // O .exe passou de 100MB (limite do GitHub pra arquivo versionado
-  // no repo), então ele é distribuído via GitHub Releases em vez de
-  // ficar direto na árvore do repositório.
+  const userAgent = navigator.userAgent.toLowerCase();
+  let linkDownload = "";
+  let fileName = "";
+
+  // Links apontando para a tag v1.2.0 e os nomes exatos dos seus arquivos
+  const linkWindows = "https://github.com/Lucas-Emanuel-360/teste/releases/download/v1.2.0/RoboBlocksConnectorWin.exe";
+  const linkLinux   = "https://github.com/Lucas-Emanuel-360/teste/releases/download/v1.2.0/RoboBlocksConnectorLinux";
+  const linkMac     = "https://github.com/Lucas-Emanuel-360/teste/releases/download/v1.2.0/RoboBlocksConnectorMac";
+
+  // Verifica o sistema e define o link e o nome do arquivo
+  if (userAgent.indexOf("mac") !== -1) {
+      linkDownload = linkMac;
+      fileName = "RoboBlocksConnectorMac";
+  } else if (userAgent.indexOf("linux") !== -1) {
+      linkDownload = linkLinux;
+      fileName = "RoboBlocksConnectorLinux";
+  } else {
+      linkDownload = linkWindows; // Windows como fallback
+      fileName = "RoboBlocksConnectorWin.exe";
+  }
+
+  // Cria o link dinâmico e força o download
   const link = document.createElement("a");
-  link.href = "https://github.com/Lucas-Emanuel-360/teste/releases/download/v1.0.0/RoboBlocksConnector.exe";
-  link.download = "RoboBlocksConnector.exe";
+  link.href = linkDownload;
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
   showToast("⬇️ Download iniciado!");
 });
