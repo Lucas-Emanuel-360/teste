@@ -56,6 +56,8 @@ function iniciarIDE(plataforma) {
     Blockly.svgResize(workspace);
     handleResponsiveLayout();
   }, 100);
+
+  maybeShowTutorial();
 }
 
 function atualizarToolbox(plataforma) {

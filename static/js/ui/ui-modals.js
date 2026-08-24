@@ -37,3 +37,23 @@ document.getElementById("viewErrorInCodeBtn").addEventListener("click", () => {
   toggleModal("errorModal", false);
   toggleModal("codeModal", true);
 });
+
+// =============================================================
+// Tutorial: abre sozinho só na primeira vez (localStorage),
+// sempre pode ser reaberto pelo menu lateral.
+// =============================================================
+function maybeShowTutorial() {
+  if (!localStorage.getItem("roboblocks_tutorial_seen")) {
+    setTimeout(() => toggleModal("tutorialModal", true), 400);
+  }
+}
+
+document.getElementById("closeTutorialBtn").addEventListener("click", () => {
+  localStorage.setItem("roboblocks_tutorial_seen", "true");
+  toggleModal("tutorialModal", false);
+});
+
+document.getElementById("tutorialBtn").addEventListener("click", () => {
+  document.getElementById("sideMenu").classList.remove("open");
+  toggleModal("tutorialModal", true);
+});

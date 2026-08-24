@@ -162,6 +162,7 @@
     <div class="side-menu-body">
       <button id="changePlatformBtn" class="menu-item" style="color: var(--accent);">🔄 Trocar Plataforma</button>
       <button id="openThemeModalBtn" class="menu-item">🎨 Mudar Tema</button>
+      <button id="tutorialBtn" class="menu-item">❓ Tutorial</button>
       <button id="downloadAgentBtn" class="menu-item">⬇️ Baixar Conector</button>
       <hr class="menu-divider">
       <div id="mobileMenuSlot"></div>
@@ -253,7 +254,38 @@
       </div>
     </div>
   </div>
-
+<!-- Modal de Instruções de Download -->
+  <div id="instructionsModal" class="config-modal" style="display: none;">
+    <div class="config-box">
+      <div class="config-header">
+        <h2>📋 Instruções de Instalação</h2>
+      </div>
+      <div class="config-body" id="instructionsBody" style="line-height: 1.6; font-size: 15px;">
+        <!-- O conteúdo será injetado dinamicamente pelo JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button id="closeInstructionsBtn" class="primary-btn">Entendi!</button>
+      </div>
+    </div>
+  </div>
+<!-- Modal de Tutorial -->
+  <div id="tutorialModal" class="config-modal" style="display: none;">
+    <div class="config-box">
+      <div class="config-header">
+        <h2>🚀 Bem-vindo ao RoboBlocks!</h2>
+      </div>
+      <div class="config-body" style="line-height: 1.6; font-size: 15px;">
+        <p><b>1.</b> Arraste os blocos da barra lateral pro workspace pra montar seu código.</p>
+        <p style="margin-top: 10px;"><b>2.</b> Use <b>Verificar</b> pra compilar e checar se está tudo certo.</p>
+        <p style="margin-top: 10px;"><b>3.</b> Conecte seu Arduino, escolha a porta e clique em <b>Upload</b> pra gravar.</p>
+        <p style="margin-top: 10px;"><b>4.</b> Se o Conector estiver offline, baixe ele no menu lateral (⬇️ Baixar Conector).</p>
+        <p style="margin-top: 10px; color: var(--text-muted); font-size: 13px;"><i>Você pode reabrir esse tutorial a qualquer momento pelo menu lateral.</i></p>
+      </div>
+      <div class="modal-footer">
+        <button id="closeTutorialBtn" class="primary-btn">Entendi!</button>
+      </div>
+    </div>
+  </div>
   <div id="codeModal" class="modal" style="display: none;">
     <div class="modal-content" style="position: relative; height: 80vh; width: 800px;">
       <button id="closeModalBtn" class="close-modal-tech" title="Fechar"></button>
