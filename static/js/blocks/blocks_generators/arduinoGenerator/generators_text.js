@@ -45,6 +45,35 @@ arduinoGenerator.forBlock['lcd_print_line'] = function(block) {
   return code;
 };
 
+// Gerador: Escrever texto numa posição (coluna, linha) específica
+arduinoGenerator.forBlock['lcd_print_at'] = function(block) {
+  _lcdEnsureSetup();
+
+  const text = arduinoGenerator.valueToCode(block, 'TEXT', arduinoGenerator.ORDER_ATOMIC) || '""';
+  const col = arduinoGenerator.valueToCode(block, 'COL', arduinoGenerator.ORDER_ATOMIC) || '0';
+  const line = block.getFieldValue('LINE');
+
+  let code = `lcd_.setCursor(${col}, ${line});\n`;
+  code += `lcd_.print(${text});\n`;
+
+  return code;
+};
+
+// Gerador: Apagar apenas uma linha (preenche com espaços em branco
+// e volta o cursor para o início da linha, já que o LCD não tem
+// comando nativo de "limpar só uma linha")
+arduinoGenerator.forBlock['lcd_clear_line'] = function(block) {
+  _lcdEnsureSetup();
+
+  const line = block.getFieldValue('LINE');
+
+  let code = `lcd_.setCursor(0, ${line});\n`;
+  code += `lcd_.print("                ");\n`; // 16 espaços = largura padrão do display
+  code += `lcd_.setCursor(0, ${line});\n`;
+
+  return code;
+};
+
 // Gerador: Limpar tela
 arduinoGenerator.forBlock['lcd_clear_display'] = function(block) {
   _lcdEnsureSetup();

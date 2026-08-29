@@ -67,6 +67,50 @@ Blockly.defineBlocksWithJsonArray([
     "tooltip": "Escreve um texto no início da linha escolhida do LCD"
   },
 
+  // Bloco: Escrever em linha e coluna específicas
+  {
+    "type": "lcd_print_at",
+    "message0": "🖥️ Escrever %1 na coluna %2 linha %3",
+    "args0": [
+      { "type": "input_value", "name": "TEXT" },
+      { "type": "input_value", "name": "COL", "check": "Number" },
+      {
+        "type": "field_dropdown",
+        "name": "LINE",
+        "options": [
+          ["1", "0"],
+          ["2", "1"]
+        ]
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D81B60",
+    "inputsInline": true,
+    "tooltip": "Escreve um texto numa posição específica (coluna e linha) do LCD"
+  },
+
+// Bloco: Apagar uma linha específica
+  {
+    "type": "lcd_clear_line",
+    "message0": "🖥️ Apagar linha %1",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "LINE",
+        "options": [
+          ["1", "0"],
+          ["2", "1"]
+        ]
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": "#D81B60",
+    "inputsInline": true,
+    "tooltip": "Apaga o conteúdo de apenas uma linha do display, mantendo o resto"
+  },
+  
   // Bloco: Limpar Display
   {
     "type": "lcd_clear_display",
