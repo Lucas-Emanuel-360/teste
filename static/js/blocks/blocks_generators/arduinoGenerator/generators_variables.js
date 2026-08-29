@@ -1,34 +1,35 @@
 // ========== GERADORES DE CÓDIGO - VARIÁVEIS (INTELIGENTE) ==========
 
 arduinoGenerator.forBlock['variables_set'] = function(block) {
-  const varName = arduinoGenerator.nameDB_.getName(
-      block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
+  const varName = arduinoGenerator.nameDB_.getName(block.getFieldValue('VAR'), Blockly.VARIABLE_CATEGORY_NAME);
   
   const argument0 = arduinoGenerator.valueToCode(block, 'VALUE', arduinoGenerator.ORDER_ASSIGNMENT) || '0';
   
-  // 1. Detecção de Tipo
-  let type = 'int'; // Padrão
-  
+  // 1. Detecção de Tipo (mantido: usado para a declaração global)
+  let type = 'int';
   if (argument0.startsWith('"') || argument0.startsWith("'")) {
     type = 'String';
   } else if (argument0.includes('.') || argument0.match(/sin|cos|tan|sqrt|pow/)) {
     type = 'float';
   }
 
-  // 2. Declaração Global (evita redefinição)
+  // 2. Declaração Global (evita redefinição) — continua igual
   if (!arduinoGenerator.definitions_['var_' + varName]) {
     arduinoGenerator.definitions_['var_' + varName] = `${type} ${varName};`;
   }
 
-  // 3. Inicialização no Setup (se for número puro) para evitar lixo de memória
-  // Se for expressão complexa, deixa para o loop
-  const isPureNumber = /^-?\d+(\.\d+)?$/.test(argument0);
-  if (isPureNumber) {
-     if (!arduinoGenerator.setups_vars_) arduinoGenerator.setups_vars_ = Object.create(null);
-     arduinoGenerator.setups_vars_['assign_' + varName] = `${varName} = ${argument0};`;
-     return ``; // adiciona a variável apenas no setup, se for um número puro
-  }
-  return `${varName} = ${argument0};\n`; // adiciona apenas no void loop
+  // 3. O bloco SEMPRE retorna o código na posição em que foi colocado
+  // no workspace — seja dentro do Setup, do Loop, ou de um if aninhado
+  // em qualquer lugar. Removemos o desvio automático para setups_vars_
+  // quando o valor era um número puro: aquela lógica assumia que todo
+  // "definir X como <número>" estava destinado ao Setup.
+  //
+  // Com blocos soltos que podem ficar em qualquer lugar (ex: dentro de
+  // um "if" no Loop, como "definir status_rodando como 1"), esse desvio
+  // fazia o código sumir do lugar onde o usuário colocou o bloco e
+  // reaparecer só uma vez, lá no topo do setup() — quebrando qualquer
+  // lógica condicional que dependesse de atribuir a variável em runtime.
+  return `${varName} = ${argument0};\n`;
 };
 
 arduinoGenerator.forBlock['variables_get'] = function(block) {
