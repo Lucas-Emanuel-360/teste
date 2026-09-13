@@ -47,7 +47,29 @@ arduinoGenerator.forBlock['math_map'] = function(block) {
   return [`map(${value}, ${fL}, ${fH}, ${tL}, ${tH})`, arduinoGenerator.ORDER_ATOMIC];
 };
 
+// Helper: garante uma semente de aleatoriedade robusta. Usa um contador persistente
+// na EEPROM (memória que sobrevive a desligamentos) combinado com
+// micros() via XOR. A cada boot, o contador da EEPROM avança, garantindo
+// uma semente diferente 
+
+function _ensureRandomSeed() {
+  arduinoGenerator.definitions_['include_eeprom'] = '#include <EEPROM.h>';
+
+  arduinoGenerator.definitions_['func_generate_seed'] =
+    'long _roboblocksGenerateSeed() {\n' +
+    '  long contador;\n' +
+    '  EEPROM.get(0, contador);\n' +
+    '  contador++;\n' +
+    '  EEPROM.put(0, contador);\n' +
+    '  return contador ^ micros();\n' +
+    '}';
+
+  arduinoGenerator.setups_['setup_random_seed'] = 'randomSeed(_roboblocksGenerateSeed());';
+}
+
 arduinoGenerator.forBlock['math_random'] = function(block) {
+  _ensureRandomSeed();
+
   const from = arduinoGenerator.valueToCode(block, 'FROM', arduinoGenerator.ORDER_NONE) || '0';
   const to = arduinoGenerator.valueToCode(block, 'TO', arduinoGenerator.ORDER_NONE) || '100';
   
