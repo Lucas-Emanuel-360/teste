@@ -8,15 +8,16 @@ arduinoGenerator.forBlock["procedures_defnoreturn"] = function (block) {
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   let branch = arduinoGenerator.statementToCode(block, "STACK");
-
   const args = [];
-  const variables = block.getVars();
+  // block.getVars() não existe nesta versão do Blockly — a API correta
+  // é getVarModels(), que já devolve os objetos de variável diretamente
+  
+  const variables = block.getVarModels();
   for (let i = 0; i < variables.length; i++) {
     args[i] =
       "float " +
-      arduinoGenerator.nameDB_.getName(variables[i], Blockly.VARIABLE_CATEGORY_NAME);
+      arduinoGenerator.nameDB_.getName(variables[i].getId(), Blockly.VARIABLE_CATEGORY_NAME);
   }
-
   let code = "void " + funcName + "(" + args.join(", ") + ") {\n" + branch + "}";
   code = arduinoGenerator.scrub_(block, code);
   arduinoGenerator.definitions_["%" + funcName] = code;
@@ -35,13 +36,12 @@ arduinoGenerator.forBlock["procedures_defreturn"] = function (block) {
     returnValue = arduinoGenerator.INDENT + "return " + returnValue + ";\n";
   }
   const args = [];
-  const variables = block.getVars();
+  const variables = block.getVarModels();
   for (let i = 0; i < variables.length; i++) {
     args[i] =
       "float " +
-      arduinoGenerator.nameDB_.getName(variables[i], Blockly.VARIABLE_CATEGORY_NAME);
+      arduinoGenerator.nameDB_.getName(variables[i].getId(), Blockly.VARIABLE_CATEGORY_NAME);
   }
-
   let code =
     "float " + funcName + "(" + args.join(", ") + ") {\n" + branch + returnValue + "}";
   code = arduinoGenerator.scrub_(block, code);
@@ -55,7 +55,7 @@ arduinoGenerator.forBlock["procedures_callnoreturn"] = function (block) {
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   const args = [];
-  const variables = block.getVars();
+  const variables = block.getVarModels();
   for (let i = 0; i < variables.length; i++) {
     args[i] =
       arduinoGenerator.valueToCode(block, "ARG" + i, arduinoGenerator.ORDER_NONE) || "0";
@@ -69,7 +69,7 @@ arduinoGenerator.forBlock["procedures_callreturn"] = function (block) {
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   const args = [];
-  const variables = block.getVars();
+  const variables = block.getVarModels();
   for (let i = 0; i < variables.length; i++) {
     args[i] =
       arduinoGenerator.valueToCode(block, "ARG" + i, arduinoGenerator.ORDER_NONE) || "0";
