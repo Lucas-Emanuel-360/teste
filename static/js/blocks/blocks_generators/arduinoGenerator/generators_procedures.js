@@ -104,3 +104,19 @@ arduinoGenerator.forBlock["procedures_callreturn"] = function (block) {
   }
   return [funcName + "(" + args.join(", ") + ")", arduinoGenerator.ORDER_ATOMIC];
 };
+
+// procedures_ifreturn: "se [condição] retorna [valor]" 
+arduinoGenerator.forBlock["procedures_ifreturn"] = function (block) {
+  const condition =
+    arduinoGenerator.valueToCode(block, "CONDITION", arduinoGenerator.ORDER_NONE) || "false";
+  const value = arduinoGenerator.valueToCode(block, "VALUE", arduinoGenerator.ORDER_NONE);
+
+  // O bloco nativo do Blockly tem uma variante "com valor" (dentro de
+  // funções que retornam algo) e, dependendo de como foi configurado,
+  // pode não ter VALUE preenchido — nesse caso, gera apenas "return;"
+  // sem valor (retorno antecipado vazio).
+  if (value) {
+    return `if (${condition}) {\n  return ${value};\n}\n`;
+  }
+  return `if (${condition}) {\n  return;\n}\n`;
+};
