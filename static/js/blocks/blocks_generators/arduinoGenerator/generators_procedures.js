@@ -2,9 +2,37 @@
 // Geradores para funções definidas pelo usuário (procedures_*).
 // =============================================================
 
+// =============================================================
+// Helper: sanitiza nomes de identificadores para
+// C++ válido. O nameDB_/Blockly.Names desta build não lida bem com
+// caracteres acentuados. ele converte cada byte UTF-8
+// do caractere para hexadecimal, resultando em nomes corrompidos 
+//
+// Esta função remove acentos antes de o nome chegar no nameDB_,
+// usando normalize('NFD') para separar a letra base do acento, e então descarta os acentos.
+// Qualquer caractere que ainda não seja letra/número/underscore após
+// isso é substituído por "_", e nomes que comecem com dígito recebem
+// um "_" na frente (identificadores C++ não podem começar com número).
+// =============================================================
+function _sanitizeIdentifier(rawName) {
+  if (!rawName) return '_';
+
+  let name = rawName
+    .normalize('NFD')                  // separa letra + acento
+    .replace(/[\u0300-\u036f]/g, '');  // remove os acentos combináveis
+
+  name = name.replace(/[^a-zA-Z0-9_]/g, '_'); // troca qualquer sobra inválida por "_"
+
+  if (/^[0-9]/.test(name)) {
+    name = '_' + name; // C++ não aceita identificador começando com número
+  }
+
+  return name || '_';
+}
+
 arduinoGenerator.forBlock["procedures_defnoreturn"] = function (block) {
   const funcName = arduinoGenerator.nameDB_.getName(
-    block.getFieldValue("NAME"),
+    _sanitizeIdentifier(block.getFieldValue("NAME")),
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   let branch = arduinoGenerator.statementToCode(block, "STACK");
@@ -26,7 +54,7 @@ arduinoGenerator.forBlock["procedures_defnoreturn"] = function (block) {
 
 arduinoGenerator.forBlock["procedures_defreturn"] = function (block) {
   const funcName = arduinoGenerator.nameDB_.getName(
-    block.getFieldValue("NAME"),
+    _sanitizeIdentifier(block.getFieldValue("NAME")),
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   let branch = arduinoGenerator.statementToCode(block, "STACK");
@@ -51,7 +79,7 @@ arduinoGenerator.forBlock["procedures_defreturn"] = function (block) {
 
 arduinoGenerator.forBlock["procedures_callnoreturn"] = function (block) {
   const funcName = arduinoGenerator.nameDB_.getName(
-    block.getFieldValue("NAME"),
+    _sanitizeIdentifier(block.getFieldValue("NAME")),
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   const args = [];
@@ -65,7 +93,7 @@ arduinoGenerator.forBlock["procedures_callnoreturn"] = function (block) {
 
 arduinoGenerator.forBlock["procedures_callreturn"] = function (block) {
   const funcName = arduinoGenerator.nameDB_.getName(
-    block.getFieldValue("NAME"),
+    _sanitizeIdentifier(block.getFieldValue("NAME")),
     Blockly.PROCEDURE_CATEGORY_NAME,
   );
   const args = [];
