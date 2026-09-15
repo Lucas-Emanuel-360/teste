@@ -1,3 +1,5 @@
+// ========== GERADORES DE CÓDIGO - TEXTO ==========
+
 arduinoGenerator.forBlock['text'] = function(block) {
   const code = JSON.stringify(block.getFieldValue('TEXT'));
   return [code, arduinoGenerator.ORDER_ATOMIC];
