@@ -51,14 +51,50 @@ arduinoGenerator.init = function(workspace) {
  * Finaliza o código, garantindo a ordem correta no setup.
  */
 arduinoGenerator.finish = function(code) {
-  // 1. Definições Globais (int a;)
-  const definitions = [];
-  for (const name in arduinoGenerator.definitions_) {
-    definitions.push(arduinoGenerator.definitions_[name]);
-  }
-  const defsCode = definitions.join('\n');
+  // Categoriza as entradas de definitions_ por prefixo da CHAVE, não
+  // pela ordem em que os blocos foram visitados no workspace. Isso
+  // garante uma ordem fixa e previsível no código final:
+  // 1. #include  
+  // 2. variáveis/objetos globais  
+  // 3. funções auxiliares internas 
+  // 4. funções definidas pelo usuário
+  // Sem isso, includes/variáveis/funções apareciam intercalados na
+  // ordem em que o Blockly processou os blocos, deixando o código
+  // gerado bagunçado e difícil de ler.
 
-  // 2. Setup de Variáveis (a = 24;) - Roda PRIMEIRO
+  const includes = [];
+  const globalVars = [];
+  const helperFuncs = [];
+  const userFuncs = [];
+
+  for (const key in arduinoGenerator.definitions_) {
+    const value = arduinoGenerator.definitions_[key];
+
+    if (key.startsWith('include_')) {
+      includes.push(value);
+    } else if (key.startsWith('%')) {
+      // Convenção existente: funções do usuário (procedures_defnoreturn/defreturn)
+      userFuncs.push(value);
+    } else if (key.startsWith('func_')) {
+      // Convenção existente: helpers internos (ex: _roboblocksGenerateSeed)
+      helperFuncs.push(value);
+    } else {
+      // Tudo que sobrar (var_, ou qualquer chave sem prefixo reconhecido)
+      // é tratado como declaração global.
+      globalVars.push(value);
+    }
+  }
+
+  const defsCode = [
+    includes.join('\n'),
+    globalVars.join('\n'),
+    helperFuncs.join('\n\n'),
+    userFuncs.join('\n\n'),
+  ]
+    .filter((block) => block.length > 0)
+    .join('\n\n');
+
+  // 2. Setup de Variáveis - Roda PRIMEIRO
   const setupsVars = [];
   for (const name in arduinoGenerator.setups_vars_) {
     setupsVars.push(arduinoGenerator.setups_vars_[name]);
